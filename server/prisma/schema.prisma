@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String     @id @default(uuid())
+  fullName    String
+  email       String     @unique
+  password    String
+  phoneNumber String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  businesses  Business[]
+}
+
+model Business {
+  id               String    @id @default(uuid())
+  businessName     String
+  rcNumber         String?   @unique
+  businessType     BusinessType
+  registrationDate DateTime?
+  address          String?
+  state            String?
+  status           String    @default("active")
+  userId           String
+  user             User      @relation(fields: [userId], references: [id])
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  filings          Filing[]
+  directors        Director[]
+  trustees         Trustee[]
+}
+
+model Director {
+  id           String   @id @default(uuid())
+  fullName     String
+  email        String?
+  phoneNumber  String?
+  address      String?
+  nationality  String?  @default("Nigerian")
+  businessId   String
+  business     Business @relation(fields: [businessId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Trustee {
+  id          String   @id @default(uuid())
+  fullName    String
+  email       String?
+  phoneNumber String?
+  address     String?
+  nationality String?  @default("Nigerian")
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Filing {
+  id            String      @id @default(uuid())
+  filingType    FilingType
+  status        FilingStatus @default(PENDING)
+  dueDate       DateTime
+  submittedAt   DateTime?
+  completedAt   DateTime?
+  amount        Float?
+  notes         String?
+  businessId    String
+  business      Business    @relation(fields: [businessId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Reminder {
+  id         String   @id @default(uuid())
+  message    String
+  sentAt     DateTime?
+  dueDate    DateTime
+  isSent     Boolean  @default(false)
+  businessId String
+  createdAt  DateTime @default(now())
+}
+
+enum BusinessType {
+  BUSINESS_NAME
+  PRIVATE_LIMITED_COMPANY
+  PUBLIC_LIMITED_COMPANY
+  INCORPORATED_TRUSTEE
+  LIMITED_LIABILITY_PARTNERSHIP
+}
+
+enum FilingType {
+  ANNUAL_RETURNS
+  CHANGE_OF_DIRECTORS
+  CHANGE_OF_ADDRESS
+  CHANGE_OF_NAME
+  INCREASE_SHARE_CAPITAL
+  AUDITED_ACCOUNTS
+  TRUSTEE_CHANGE
+  PARTNERSHIP_CHANGE
+}
+
+enum FilingStatus {
+  PENDING
+  IN_REVIEW
+  PROCESSING
+  SUBMITTED_TO_CAC
+  COMPLETED
+  REJECTED
+}
