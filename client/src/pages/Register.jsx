@@ -41,7 +41,7 @@ function Register() {
       );
 
       login(response.data.user, response.data.token);
-      navigate("/dashboard");
+      navigate("/business/setup");
     } catch (err) {
       setError(
         err.response?.data?.message ||

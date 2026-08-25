@@ -1,24 +1,57 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 
 function Dashboard() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
+  const [stats, setStats] = useState({
+    totalBusinesses: 0,
+    totalFilings: 0,
+    pendingFilings: 0,
+    completedFilings: 0,
+    dueSoonFilings: 0,
+  });
+  const [businesses, setBusinesses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get user from localStorage
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
-      navigate("/login");
-      return;
-    }
-    setUser(JSON.parse(storedUser));
-  }, [navigate]);
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          "http://localhost:5000/api/business/stats",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        setStats(response.data.stats);
+        setBusinesses(response.data.businesses);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    logout();
     navigate("/login");
+  };
+
+  const formatBusinessType = (type) => {
+    const types = {
+      BUSINESS_NAME: "Business Name",
+      PRIVATE_LIMITED_COMPANY: "Private Limited Company",
+      PUBLIC_LIMITED_COMPANY: "Public Limited Company",
+      INCORPORATED_TRUSTEE: "Incorporated Trustee",
+      LIMITED_LIABILITY_PARTNERSHIP: "Limited Liability Partnership",
+    };
+    return types[type] || type;
   };
 
   if (!user) return null;
@@ -54,12 +87,20 @@ function Dashboard() {
           <p className="mt-2 text-green-200">
             Here's an overview of your business compliance status.
           </p>
-          <button
-            onClick={() => navigate("/new-filing")}
-            className="mt-4 px-6 py-2 bg-white text-green-800 font-semibold rounded-xl hover:bg-green-50 transition text-sm"
-          >
-            + Start New Filing
-          </button>
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={() => navigate("/new-filing")}
+              className="px-6 py-2 bg-white text-green-800 font-semibold rounded-xl hover:bg-green-50 transition text-sm"
+            >
+              + Start New Filing
+            </button>
+            <button
+              onClick={() => navigate("/business/setup")}
+              className="px-6 py-2 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-600 transition text-sm border border-green-600"
+            >
+              + Add Business
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -67,25 +108,25 @@ function Dashboard() {
           {[
             {
               label: "Total Filings",
-              value: "0",
+              value: stats.totalFilings,
               icon: "📋",
               color: "bg-blue-50 text-blue-700",
             },
             {
               label: "Pending",
-              value: "0",
+              value: stats.pendingFilings,
               icon: "⏳",
               color: "bg-yellow-50 text-yellow-700",
             },
             {
               label: "Completed",
-              value: "0",
+              value: stats.completedFilings,
               icon: "✅",
               color: "bg-green-50 text-green-700",
             },
             {
               label: "Due Soon",
-              value: "0",
+              value: stats.dueSoonFilings,
               icon: "🔔",
               color: "bg-red-50 text-red-700",
             },
@@ -100,7 +141,7 @@ function Dashboard() {
                 {stat.icon}
               </div>
               <p className="mt-2 text-2xl font-bold text-gray-800">
-                {stat.value}
+                {loading ? "..." : stat.value}
               </p>
               <p className="text-sm text-gray-500">{stat.label}</p>
             </div>
@@ -109,30 +150,74 @@ function Dashboard() {
 
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Recent Filings */}
+          {/* My Businesses */}
           <div className="md:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-800">
-                Recent Filings
-              </h2>
-              <button className="text-sm text-green-700 hover:underline">
-                View All
-              </button>
-            </div>
-            {/* Empty State */}
-            <div className="text-center py-12">
-              <div className="text-5xl mb-4">📭</div>
-              <p className="text-gray-500 font-medium">No filings yet</p>
-              <p className="text-gray-400 text-sm mt-1">
-                Start your first CAC filing to see it here
-              </p>
+              <h2 className="text-lg font-bold text-gray-800">My Businesses</h2>
               <button
-                onClick={() => navigate("/new-filing")}
-                className="mt-4 px-6 py-2 bg-green-800 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition"
+                onClick={() => navigate("/business/setup")}
+                className="text-sm text-green-700 hover:underline"
               >
-                Start Filing
+                + Add New
               </button>
             </div>
+
+            {loading ? (
+              <div className="text-center py-8 text-gray-400">Loading...</div>
+            ) : businesses.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-5xl mb-4">🏢</div>
+                <p className="text-gray-500 font-medium">No businesses yet</p>
+                <p className="text-gray-400 text-sm mt-1">
+                  Add your business to get started
+                </p>
+                <button
+                  onClick={() => navigate("/business/setup")}
+                  className="mt-4 px-6 py-2 bg-green-800 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition"
+                >
+                  Add Business
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {businesses.map((business) => (
+                  <div
+                    key={business.id}
+                    className="p-4 border border-gray-100 rounded-xl hover:bg-green-50 transition cursor-pointer"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold text-gray-800">
+                          {business.businessName}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {formatBusinessType(business.businessType)}
+                        </p>
+                        {business.rcNumber && (
+                          <p className="text-xs text-green-700 mt-1">
+                            RC: {business.rcNumber}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            business.status === "active"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {business.status}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {business.filings.length} filing(s)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Quick Actions */}
@@ -181,21 +266,26 @@ function Dashboard() {
         </div>
 
         {/* Compliance Reminder Banner */}
-        <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-start gap-3">
-          <span className="text-2xl">⚠️</span>
-          <div>
-            <p className="font-semibold text-yellow-800">
-              Add Your Business Profile
-            </p>
-            <p className="text-sm text-yellow-700 mt-1">
-              Complete your business profile to get personalized compliance
-              reminders and filing deadlines.
-            </p>
-            <button className="mt-2 text-sm text-yellow-800 font-medium underline">
-              Complete Profile →
-            </button>
+        {businesses.length === 0 && (
+          <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-start gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <p className="font-semibold text-yellow-800">
+                Add Your Business Profile
+              </p>
+              <p className="text-sm text-yellow-700 mt-1">
+                Complete your business profile to get personalized compliance
+                reminders and filing deadlines.
+              </p>
+              <button
+                onClick={() => navigate("/business/setup")}
+                className="mt-2 text-sm text-yellow-800 font-medium underline"
+              >
+                Complete Profile →
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
