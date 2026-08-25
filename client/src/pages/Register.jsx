@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 
 function Register() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -38,11 +40,7 @@ function Register() {
         },
       );
 
-      // Save token to localStorage
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-
-      // Redirect to dashboard
+      login(response.data.user, response.data.token);
       navigate("/dashboard");
     } catch (err) {
       setError(
@@ -56,7 +54,7 @@ function Register() {
 
   return (
     <div className="min-h-screen bg-green-50 flex flex-col md:flex-row">
-      {/* Left Side — Branding (hidden on mobile) */}
+      {/* Left Side — Branding */}
       <div className="hidden md:flex md:w-1/2 bg-green-800 flex-col justify-center items-center p-12 text-white">
         <h1 className="text-4xl font-bold mb-4">CAC Filing</h1>
         <p className="text-green-200 text-center text-lg">
@@ -80,7 +78,6 @@ function Register() {
 
       {/* Right Side — Form */}
       <div className="flex-1 flex flex-col justify-center px-6 py-12 md:px-12">
-        {/* Logo on mobile */}
         <div className="md:hidden text-center mb-8">
           <h1 className="text-3xl font-bold text-green-800">CAC Filing</h1>
           <p className="text-gray-500 mt-1">Create your account</p>
@@ -100,7 +97,6 @@ function Register() {
             </span>
           </p>
 
-          {/* Error Message */}
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
               {error}
@@ -108,7 +104,6 @@ function Register() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Full Name
@@ -124,7 +119,6 @@ function Register() {
               />
             </div>
 
-            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email Address
@@ -140,7 +134,6 @@ function Register() {
               />
             </div>
 
-            {/* Phone Number */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Phone Number
@@ -155,7 +148,6 @@ function Register() {
               />
             </div>
 
-            {/* Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Password
@@ -171,7 +163,6 @@ function Register() {
               />
             </div>
 
-            {/* Confirm Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Confirm Password
@@ -187,7 +178,6 @@ function Register() {
               />
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
