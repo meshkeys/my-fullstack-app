@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import api from "../utils/api";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -19,24 +19,27 @@ function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          "http://localhost:5000/api/business/stats",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        console.log("Fetching stats...");
+        console.log("Token in localStorage:", localStorage.getItem("token"));
+        const response = await api.get("/api/business/stats");
+        console.log("Stats response:", response.data);
         setStats(response.data.stats);
         setBusinesses(response.data.businesses);
       } catch (error) {
-        console.error("Error fetching stats:", error);
+        console.error("Error fetching stats:", error.response?.data);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStats();
-  }, []);
+    console.log("User in dashboard:", user);
+
+    if (user) {
+      fetchStats();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -53,6 +56,22 @@ function Dashboard() {
     };
     return types[type] || type;
   };
+
+  if (!user) return null;
+
+  // 👇 ADD THIS HERE — before the main return
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏳</div>
+          <p className="text-green-800 font-medium">
+            Loading your dashboard...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) return null;
 
@@ -275,7 +294,7 @@ function Dashboard() {
               </p>
               <p className="text-sm text-yellow-700 mt-1">
                 Complete your business profile to get personalized compliance
-                reminders and filing deadlines.
+                reminders.
               </p>
               <button
                 onClick={() => navigate("/business/setup")}

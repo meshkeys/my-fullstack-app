@@ -5,12 +5,14 @@ const {
   getMyBusinesses,
   getBusinessById,
   updateBusiness,
+  getDashboardStats,
 } = require("../controllers/businessController");
 const { protect } = require("../middleware/authMiddleware");
 
 // All routes are protected
 router.use(protect);
 
+router.get("/stats", getDashboardStats);
 router.post("/", createBusiness);
 router.get("/", getMyBusinesses);
 router.get("/:id", getBusinessById);

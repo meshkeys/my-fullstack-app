@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useContext } from "react";
 import axios from "axios";
 
@@ -5,16 +6,25 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
+    try {
+      const storedUser = localStorage.getItem("user");
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch {
+      return null;
+    }
   });
 
   const [token, setToken] = useState(() => {
-    const storedToken = localStorage.getItem("token");
-    if (storedToken) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
+    try {
+      const storedToken = localStorage.getItem("token");
+      if (storedToken) {
+        axios.defaults.headers.common["Authorization"] =
+          `Bearer ${storedToken}`;
+      }
+      return storedToken || null;
+    } catch {
+      return null;
     }
-    return storedToken || null;
   });
 
   const login = (userData, userToken) => {

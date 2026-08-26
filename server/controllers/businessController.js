@@ -167,9 +167,64 @@ const updateBusiness = async (req, res) => {
   }
 };
 
+// @desc    Get dashboard stats for logged in user
+// @route   GET /api/business/stats
+const getDashboardStats = async (req, res) => {
+  try {
+    const businesses = await prisma.business.findMany({
+      where: { userId: req.user.id },
+      include: { filings: true },
+    });
+
+    const totalFilings = businesses.reduce(
+      (acc, b) => acc + b.filings.length,
+      0,
+    );
+    const pendingFilings = businesses.reduce(
+      (acc, b) => acc + b.filings.filter((f) => f.status === "PENDING").length,
+      0,
+    );
+    const completedFilings = businesses.reduce(
+      (acc, b) =>
+        acc + b.filings.filter((f) => f.status === "COMPLETED").length,
+      0,
+    );
+    const dueSoonFilings = businesses.reduce(
+      (acc, b) =>
+        acc +
+        b.filings.filter((f) => {
+          const dueDate = new Date(f.dueDate);
+          const today = new Date();
+          const diff = (dueDate - today) / (1000 * 60 * 60 * 24);
+          return diff <= 30 && diff >= 0;
+        }).length,
+      0,
+    );
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalBusinesses: businesses.length,
+        totalFilings,
+        pendingFilings,
+        completedFilings,
+        dueSoonFilings,
+      },
+      businesses,
+    });
+  } catch (error) {
+    console.error("Dashboard stats error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong. Please try again.",
+    });
+  }
+};
+
 module.exports = {
   createBusiness,
   getMyBusinesses,
   getBusinessById,
   updateBusiness,
+  getDashboardStats,
 };

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
+//import axios from "axios";
 //import { useAuth } from "../context/AuthContext";
 
 const BUSINESS_TYPES = [
@@ -103,12 +104,7 @@ function BusinessSetup() {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem("token"); // get directly from localStorage
-      console.log("Token:", token); // debug line
-      setError("");
-      await axios.post("http://localhost:5000/api/business", formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.post("/api/business", formData);
       navigate("/dashboard");
     } catch (err) {
       setError(

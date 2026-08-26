@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 
 function Register() {
@@ -30,15 +30,13 @@ function Register() {
 
     try {
       setLoading(true);
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/register",
-        {
-          fullName: formData.fullName,
-          email: formData.email,
-          password: formData.password,
-          phoneNumber: formData.phoneNumber,
-        },
-      );
+      // Replace axios.post with:
+      const response = await api.post("/api/auth/register", {
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        phoneNumber: formData.phoneNumber,
+      });
 
       login(response.data.user, response.data.token);
       navigate("/business/setup");
