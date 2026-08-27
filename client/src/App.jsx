@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import BusinessSetup from "./pages/BusinessSetup";
+import NewFiling from "./pages/NewFiling";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -26,6 +27,14 @@ function App() {
           element={
             <ProtectedRoute>
               <BusinessSetup />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/new-filing"
+          element={
+            <ProtectedRoute>
+              <NewFiling />
             </ProtectedRoute>
           }
         />

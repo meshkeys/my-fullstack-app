@@ -5,15 +5,23 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/authRoutes");
 const businessRoutes = require("./routes/businessRoutes");
+const filingRoutes = require("./routes/filingRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173", process.env.CLIENT_URL],
+    credentials: true,
+  }),
+);
+
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/business", businessRoutes);
+app.use("/api/filings", filingRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "CAC Filing API is running! 🚀" });
