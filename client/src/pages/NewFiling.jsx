@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../utils/api";
 
 const FORM_FIELDS = {
@@ -79,6 +79,8 @@ const FORM_FIELDS = {
 
 function NewFiling() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preSelectedType = searchParams.get("type");
   const [step, setStep] = useState(1);
   const [filingTypes, setFilingTypes] = useState([]);
   const [businesses, setBusinesses] = useState([]);
@@ -98,12 +100,23 @@ function NewFiling() {
         ]);
         setFilingTypes(typesRes.data.filingTypes);
         setBusinesses(businessRes.data.businesses);
+
+        // Pre-select filing type if passed in URL
+        if (preSelectedType) {
+          const found = typesRes.data.filingTypes.find(
+            (t) => t.type === preSelectedType,
+          );
+          if (found) {
+            setSelectedType(found);
+            setStep(2); // Skip to business selection
+          }
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
     fetchData();
-  }, []);
+  }, [preSelectedType]);
 
   const handleFieldChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

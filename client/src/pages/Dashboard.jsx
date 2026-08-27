@@ -18,6 +18,13 @@ function Dashboard() {
 
   useEffect(() => {
     const fetchStats = async () => {
+      console.log("User in dashboard:", user);
+
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       try {
         console.log("Fetching stats...");
         console.log("Token in localStorage:", localStorage.getItem("token"));
@@ -32,13 +39,7 @@ function Dashboard() {
       }
     };
 
-    console.log("User in dashboard:", user);
-
-    if (user) {
-      fetchStats();
-    } else {
-      setLoading(false);
-    }
+    fetchStats();
   }, [user]);
 
   const handleLogout = () => {
@@ -59,7 +60,6 @@ function Dashboard() {
 
   if (!user) return null;
 
-  // 👇 ADD THIS HERE — before the main return
   if (loading) {
     return (
       <div className="min-h-screen bg-green-50 flex items-center justify-center">
@@ -72,8 +72,6 @@ function Dashboard() {
       </div>
     );
   }
-
-  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-green-50">
@@ -240,48 +238,29 @@ function Dashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">
-              Quick Actions
-            </h2>
-            <div className="space-y-3">
-              {[
-                {
-                  icon: "📝",
-                  label: "Annual Returns",
-                  desc: "File your yearly returns",
-                },
-                {
-                  icon: "👥",
-                  label: "Change Directors",
-                  desc: "Update director info",
-                },
-                {
-                  icon: "📍",
-                  label: "Change Address",
-                  desc: "Update business address",
-                },
-                {
-                  icon: "✏️",
-                  label: "Change Name",
-                  desc: "Update business name",
-                },
-              ].map((action, i) => (
-                <button
-                  key={i}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 transition text-left border border-gray-100"
-                >
-                  <span className="text-xl">{action.icon}</span>
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">
-                      {action.label}
-                    </p>
-                    <p className="text-xs text-gray-400">{action.desc}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
+<div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+  <h2 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h2>
+  <div className="space-y-3">
+    {[
+      { icon: '📝', label: 'Annual Returns', desc: 'File your yearly returns', type: 'ANNUAL_RETURNS' },
+      { icon: '👥', label: 'Change Directors', desc: 'Update director info', type: 'CHANGE_OF_DIRECTORS' },
+      { icon: '📍', label: 'Change Address', desc: 'Update business address', type: 'CHANGE_OF_ADDRESS' },
+      { icon: '✏️', label: 'Change Name', desc: 'Update business name', type: 'CHANGE_OF_NAME' },
+    ].map((action, i) => (
+      <button
+        key={i}
+        onClick={() => navigate(`/new-filing?type=${action.type}`)}
+        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 transition text-left border border-gray-100"
+      >
+        <span className="text-xl">{action.icon}</span>
+        <div>
+          <p className="text-sm font-medium text-gray-800">{action.label}</p>
+          <p className="text-xs text-gray-400">{action.desc}</p>
+        </div>
+      </button>
+    ))}
+  </div>
+</div>
         </div>
 
         {/* Compliance Reminder Banner */}
