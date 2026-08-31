@@ -75,6 +75,46 @@ const FORM_FIELDS = {
       required: true,
     },
   ],
+  CHANGE_OF_ADDRESS: [
+    {
+      name: "newAddress",
+      label: "New Registered Address",
+      type: "textarea",
+      required: true,
+    },
+    {
+      name: "previousAddress",
+      label: "Previous Address",
+      type: "textarea",
+      required: false,
+    },
+    {
+      name: "effectiveDate",
+      label: "Effective Date of Change",
+      type: "date",
+      required: true,
+    },
+  ],
+  CHANGE_OF_NAME: [
+    {
+      name: "newBusinessName",
+      label: "New Business Name",
+      type: "text",
+      required: true,
+    },
+    {
+      name: "reasonForChange",
+      label: "Reason for Change",
+      type: "text",
+      required: false,
+    },
+    {
+      name: "effectiveDate",
+      label: "Effective Date of Change",
+      type: "date",
+      required: true,
+    },
+  ],
 };
 
 function NewFiling() {
