@@ -14,31 +14,29 @@ function Dashboard() {
     dueSoonFilings: 0,
   });
   const [businesses, setBusinesses] = useState([]);
+  const [filings, setFilings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
-      console.log("User in dashboard:", user);
-
       if (!user) {
         setLoading(false);
         return;
       }
-
       try {
-        console.log("Fetching stats...");
-        console.log("Token in localStorage:", localStorage.getItem("token"));
-        const response = await api.get("/api/business/stats");
-        console.log("Stats response:", response.data);
-        setStats(response.data.stats);
-        setBusinesses(response.data.businesses);
+        const [statsRes, filingsRes] = await Promise.all([
+          api.get("/api/business/stats"),
+          api.get("/api/filings"),
+        ]);
+        setStats(statsRes.data.stats);
+        setBusinesses(statsRes.data.businesses);
+        setFilings(filingsRes.data.filings);
       } catch (error) {
         console.error("Error fetching stats:", error.response?.data);
       } finally {
         setLoading(false);
       }
     };
-
     fetchStats();
   }, [user]);
 
@@ -56,6 +54,38 @@ function Dashboard() {
       LIMITED_LIABILITY_PARTNERSHIP: "Limited Liability Partnership",
     };
     return types[type] || type;
+  };
+
+  const formatFilingType = (type) => {
+    const types = {
+      ANNUAL_RETURNS: "Annual Returns",
+      CHANGE_OF_DIRECTORS: "Change of Directors",
+      CHANGE_OF_ADDRESS: "Change of Address",
+      CHANGE_OF_NAME: "Change of Name",
+      INCREASE_SHARE_CAPITAL: "Increase Share Capital",
+      AUDITED_ACCOUNTS: "Audited Accounts",
+    };
+    return types[type] || type;
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      PENDING: "bg-yellow-100 text-yellow-700",
+      IN_REVIEW: "bg-blue-100 text-blue-700",
+      PROCESSING: "bg-purple-100 text-purple-700",
+      SUBMITTED_TO_CAC: "bg-indigo-100 text-indigo-700",
+      COMPLETED: "bg-green-100 text-green-700",
+      REJECTED: "bg-red-100 text-red-700",
+    };
+    return colors[status] || "bg-gray-100 text-gray-700";
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 0,
+    }).format(amount);
   };
 
   if (!user) return null;
@@ -158,7 +188,7 @@ function Dashboard() {
                 {stat.icon}
               </div>
               <p className="mt-2 text-2xl font-bold text-gray-800">
-                {loading ? "..." : stat.value}
+                {stat.value}
               </p>
               <p className="text-sm text-gray-500">{stat.label}</p>
             </div>
@@ -167,123 +197,215 @@ function Dashboard() {
 
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* My Businesses */}
-          <div className="md:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-800">My Businesses</h2>
-              <button
-                onClick={() => navigate("/business/setup")}
-                className="text-sm text-green-700 hover:underline"
-              >
-                + Add New
-              </button>
-            </div>
-
-            {loading ? (
-              <div className="text-center py-8 text-gray-400">Loading...</div>
-            ) : businesses.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-5xl mb-4">🏢</div>
-                <p className="text-gray-500 font-medium">No businesses yet</p>
-                <p className="text-gray-400 text-sm mt-1">
-                  Add your business to get started
-                </p>
+          {/* Left Column */}
+          <div className="md:col-span-2 space-y-6">
+            {/* Recent Filings */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-gray-800">
+                  Recent Filings
+                </h2>
                 <button
-                  onClick={() => navigate("/business/setup")}
-                  className="mt-4 px-6 py-2 bg-green-800 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition"
+                  onClick={() => navigate("/new-filing")}
+                  className="text-sm text-green-700 hover:underline"
                 >
-                  Add Business
+                  + New Filing
                 </button>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {businesses.map((business) => (
-                  <div
-                    key={business.id}
-                    className="p-4 border border-gray-100 rounded-xl hover:bg-green-50 transition cursor-pointer"
+              {filings.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-5xl mb-4">📭</div>
+                  <p className="text-gray-500 font-medium">No filings yet</p>
+                  <p className="text-gray-400 text-sm mt-1">
+                    Start your first CAC filing to see it here
+                  </p>
+                  <button
+                    onClick={() => navigate("/new-filing")}
+                    className="mt-4 px-6 py-2 bg-green-800 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition"
                   >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold text-gray-800">
-                          {business.businessName}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {formatBusinessType(business.businessType)}
-                        </p>
-                        {business.rcNumber && (
-                          <p className="text-xs text-green-700 mt-1">
-                            RC: {business.rcNumber}
+                    Start Filing
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filings.slice(0, 5).map((filing) => (
+                    <div
+                      key={filing.id}
+                      className="p-4 border border-gray-100 rounded-xl hover:bg-green-50 transition"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold text-gray-800">
+                            {formatFilingType(filing.filingType)}
                           </p>
-                        )}
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full font-medium ${
-                            business.status === "active"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {business.status}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {business.filings.length} filing(s)
-                        </span>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {filing.business?.businessName}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {new Date(filing.createdAt).toLocaleDateString(
+                              "en-NG",
+                              {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              },
+                            )}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(filing.status)}`}
+                          >
+                            {filing.status.replace(/_/g, " ")}
+                          </span>
+                          {filing.amount && (
+                            <span className="text-xs text-green-700 font-medium">
+                              {formatCurrency(filing.amount)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* My Businesses */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-gray-800">
+                  My Businesses
+                </h2>
+                <button
+                  onClick={() => navigate("/business/setup")}
+                  className="text-sm text-green-700 hover:underline"
+                >
+                  + Add New
+                </button>
               </div>
-            )}
+              {businesses.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-5xl mb-4">🏢</div>
+                  <p className="text-gray-500 font-medium">No businesses yet</p>
+                  <button
+                    onClick={() => navigate("/business/setup")}
+                    className="mt-4 px-6 py-2 bg-green-800 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition"
+                  >
+                    Add Business
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {businesses.map((business) => (
+                    <div
+                      key={business.id}
+                      className="p-4 border border-gray-100 rounded-xl hover:bg-green-50 transition cursor-pointer"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold text-gray-800">
+                            {business.businessName}
+                          </p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {formatBusinessType(business.businessType)}
+                          </p>
+                          {business.rcNumber && (
+                            <p className="text-xs text-green-700 mt-1">
+                              RC: {business.rcNumber}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full font-medium ${
+                              business.status === "active"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {business.status}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            {business.filings.length} filing(s)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Quick Actions */}
-<div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-  <h2 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h2>
-  <div className="space-y-3">
-    {[
-      { icon: '📝', label: 'Annual Returns', desc: 'File your yearly returns', type: 'ANNUAL_RETURNS' },
-      { icon: '👥', label: 'Change Directors', desc: 'Update director info', type: 'CHANGE_OF_DIRECTORS' },
-      { icon: '📍', label: 'Change Address', desc: 'Update business address', type: 'CHANGE_OF_ADDRESS' },
-      { icon: '✏️', label: 'Change Name', desc: 'Update business name', type: 'CHANGE_OF_NAME' },
-    ].map((action, i) => (
-      <button
-        key={i}
-        onClick={() => navigate(`/new-filing?type=${action.type}`)}
-        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 transition text-left border border-gray-100"
-      >
-        <span className="text-xl">{action.icon}</span>
-        <div>
-          <p className="text-sm font-medium text-gray-800">{action.label}</p>
-          <p className="text-xs text-gray-400">{action.desc}</p>
-        </div>
-      </button>
-    ))}
-  </div>
-</div>
-        </div>
-
-        {/* Compliance Reminder Banner */}
-        {businesses.length === 0 && (
-          <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-start gap-3">
-            <span className="text-2xl">⚠️</span>
-            <div>
-              <p className="font-semibold text-yellow-800">
-                Add Your Business Profile
-              </p>
-              <p className="text-sm text-yellow-700 mt-1">
-                Complete your business profile to get personalized compliance
-                reminders.
-              </p>
-              <button
-                onClick={() => navigate("/business/setup")}
-                className="mt-2 text-sm text-yellow-800 font-medium underline"
-              >
-                Complete Profile →
-              </button>
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 h-fit">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">
+              Quick Actions
+            </h2>
+            <div className="space-y-3">
+              {[
+                {
+                  icon: "📝",
+                  label: "Annual Returns",
+                  desc: "File your yearly returns",
+                  type: "ANNUAL_RETURNS",
+                },
+                {
+                  icon: "👥",
+                  label: "Change Directors",
+                  desc: "Update director info",
+                  type: "CHANGE_OF_DIRECTORS",
+                },
+                {
+                  icon: "📍",
+                  label: "Change Address",
+                  desc: "Update business address",
+                  type: "CHANGE_OF_ADDRESS",
+                },
+                {
+                  icon: "✏️",
+                  label: "Change Name",
+                  desc: "Update business name",
+                  type: "CHANGE_OF_NAME",
+                },
+              ].map((action, i) => (
+                <button
+                  key={i}
+                  onClick={() => navigate(`/new-filing?type=${action.type}`)}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 transition text-left border border-gray-100 cursor-pointer"
+                >
+                  <span className="text-xl">{action.icon}</span>
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">
+                      {action.label}
+                    </p>
+                    <p className="text-xs text-gray-400">{action.desc}</p>
+                  </div>
+                  <span className="ml-auto text-green-600">→</span>
+                </button>
+              ))}
             </div>
+
+            {/* Compliance reminder */}
+            {businesses.length === 0 && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+                <p className="text-xs font-semibold text-yellow-800">
+                  ⚠️ Add Your Business
+                </p>
+                <p className="text-xs text-yellow-700 mt-1">
+                  Add a business to start filing
+                </p>
+                <button
+                  onClick={() => navigate("/business/setup")}
+                  className="mt-2 text-xs text-yellow-800 font-medium underline"
+                >
+                  Add Business →
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
