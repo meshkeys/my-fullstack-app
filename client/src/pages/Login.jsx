@@ -120,7 +120,10 @@ function Login() {
             </div>
 
             <div className="text-right">
-              <span className="text-sm text-green-700 cursor-pointer hover:underline">
+              <span
+                onClick={() => navigate("/forgot-password")}
+                className="text-sm text-green-700 cursor-pointer hover:underline"
+              >
                 Forgot Password?
               </span>
             </div>
