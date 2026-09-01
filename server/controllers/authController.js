@@ -127,9 +127,6 @@ const login = async (req, res) => {
   }
 };
 
-const crypto = require("crypto");
-const { sendPasswordResetEmail } = require("../utils/emailService");
-
 // @desc    Forgot password
 // @route   POST /api/auth/forgot-password
 const forgotPassword = async (req, res) => {
