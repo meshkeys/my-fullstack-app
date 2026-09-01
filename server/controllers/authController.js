@@ -1,6 +1,8 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const prisma = require("../prisma/client");
+const crypto = require("crypto");
+const { sendPasswordResetEmail } = require("../utils/emailService");
 
 // Generate JWT Token
 const generateToken = (userId) => {
