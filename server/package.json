@@ -15,6 +15,7 @@
     "@getbrevo/brevo": "^6.0.3",
     "@prisma/client": "^6.19.3",
     "@prisma/config": "^7.8.0",
+    "apify-client": "^2.25.0",
     "axios": "^1.20.0",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.2.0",

@@ -1,4 +1,4 @@
-const axios = require("axios");
+const { ApifyClient } = require("apify-client");
 
 const searchCAC = async (req, res) => {
   try {
@@ -13,50 +13,33 @@ const searchCAC = async (req, res) => {
 
     console.log("Searching CAC for:", query);
 
-    const response = await axios.get(
-      `https://business-and-company-name-api.p.rapidapi.com/search`,
-      {
-        params: { q: query },
-        headers: {
-          "x-rapidapi-key": process.env.RAPIDAPI_KEY,
-          "x-rapidapi-host": "business-and-company-name-api.p.rapidapi.com",
-        },
-        timeout: 15000,
-      },
-    );
+    const client = new ApifyClient({
+      token: process.env.APIFY_TOKEN,
+    });
 
-    console.log(
-      "CAC Response:",
-      JSON.stringify(response.data).substring(0, 200),
-    );
+    // Run the CAC lookup actor
+    const run = await client.actor("mansalabs/cac-company-lookup").call({
+      searchTerms: [query],
+      maxResults: 10,
+    });
 
-    const data = response.data;
-    const results = [];
+    // Fetch results from dataset
+    const { items } = await client.dataset(run.defaultDatasetId).listItems();
 
-    // Parse results
-    if (Array.isArray(data)) {
-      data.forEach((company) => {
-        results.push({
-          name: company.companyName || company.name || "",
-          rcNumber: company.registrationNumber || company.rcNumber || "",
-          type: company.companyType || company.type || "",
-          status: company.status || "ACTIVE",
-          registrationDate: company.registrationDate || "",
-          natureOfBusiness: company.natureOfBusiness || "",
-        });
-      });
-    } else if (data.data && Array.isArray(data.data)) {
-      data.data.forEach((company) => {
-        results.push({
-          name: company.companyName || company.name || "",
-          rcNumber: company.registrationNumber || company.rcNumber || "",
-          type: company.companyType || company.type || "",
-          status: company.status || "ACTIVE",
-          registrationDate: company.registrationDate || "",
-          natureOfBusiness: company.natureOfBusiness || "",
-        });
-      });
-    }
+    console.log("Apify results:", JSON.stringify(items).substring(0, 300));
+
+    const results = items.map((company) => {
+      console.log("Company raw data:", JSON.stringify(company));
+      return {
+        name: company.company_name || company.approvedName || "",
+        rcNumber: company.rc_number || company.registrationNumber || "",
+        type: company.entity_type || company.classificationLabel || "",
+        status: company.status || "ACTIVE",
+        registrationDate:
+          company.incorporation_date || company.registrationDate || "",
+        natureOfBusiness: company.nature_of_business || "",
+      };
+    });
 
     res.status(200).json({
       success: true,

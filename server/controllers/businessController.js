@@ -1,5 +1,64 @@
 const prisma = require("../prisma/client");
 
+const getComplianceInfo = (businessType, registrationDate) => {
+  const regDate = new Date(registrationDate);
+  const today = new Date();
+
+  // Renewal periods per CAC rules
+  const renewalPeriods = {
+    BUSINESS_NAME: 1, // yearly
+    PRIVATE_LIMITED_COMPANY: 1, // yearly
+    PUBLIC_LIMITED_COMPANY: 1, // yearly
+    INCORPORATED_TRUSTEE: 1, // yearly
+    LIMITED_LIABILITY_PARTNERSHIP: 1, // yearly
+  };
+
+  const yearsRegistered = Math.floor(
+    (today - regDate) / (1000 * 60 * 60 * 24 * 365),
+  );
+
+  // Calculate next due date
+  const nextDueDate = new Date(regDate);
+  nextDueDate.setFullYear(regDate.getFullYear() + yearsRegistered + 1);
+
+  // Days until due
+  const daysUntilDue = Math.floor(
+    (nextDueDate - today) / (1000 * 60 * 60 * 24),
+  );
+
+  // Compliance status
+  let complianceStatus = "good";
+  let complianceColor = "green";
+  let complianceMessage = "";
+
+  if (daysUntilDue < 0) {
+    complianceStatus = "overdue";
+    complianceColor = "red";
+    complianceMessage = `Annual returns overdue by ${Math.abs(daysUntilDue)} days!`;
+  } else if (daysUntilDue <= 30) {
+    complianceStatus = "critical";
+    complianceColor = "red";
+    complianceMessage = `Annual returns due in ${daysUntilDue} days!`;
+  } else if (daysUntilDue <= 90) {
+    complianceStatus = "warning";
+    complianceColor = "amber";
+    complianceMessage = `Annual returns due in ${daysUntilDue} days`;
+  } else {
+    complianceStatus = "good";
+    complianceColor = "green";
+    complianceMessage = `Next filing due in ${daysUntilDue} days`;
+  }
+
+  return {
+    nextDueDate: nextDueDate.toISOString(),
+    daysUntilDue,
+    complianceStatus,
+    complianceColor,
+    complianceMessage,
+    yearsRegistered,
+  };
+};
+
 // @desc    Create business profile
 // @route   POST /api/business
 const createBusiness = async (req, res) => {
@@ -176,6 +235,18 @@ const getDashboardStats = async (req, res) => {
       include: { filings: true },
     });
 
+    // Add compliance info to each business
+    const businessesWithCompliance = businesses.map((business) => {
+      let complianceInfo = null;
+      if (business.registrationDate) {
+        complianceInfo = getComplianceInfo(
+          business.businessType,
+          business.registrationDate,
+        );
+      }
+      return { ...business, complianceInfo };
+    });
+
     const totalFilings = businesses.reduce(
       (acc, b) => acc + b.filings.length,
       0,
@@ -189,17 +260,12 @@ const getDashboardStats = async (req, res) => {
         acc + b.filings.filter((f) => f.status === "COMPLETED").length,
       0,
     );
-    const dueSoonFilings = businesses.reduce(
-      (acc, b) =>
-        acc +
-        b.filings.filter((f) => {
-          const dueDate = new Date(f.dueDate);
-          const today = new Date();
-          const diff = (dueDate - today) / (1000 * 60 * 60 * 24);
-          return diff <= 30 && diff >= 0;
-        }).length,
-      0,
-    );
+    const dueSoonFilings = businessesWithCompliance.filter(
+      (b) =>
+        b.complianceInfo?.complianceStatus === "warning" ||
+        b.complianceInfo?.complianceStatus === "critical" ||
+        b.complianceInfo?.complianceStatus === "overdue",
+    ).length;
 
     res.status(200).json({
       success: true,
@@ -210,7 +276,7 @@ const getDashboardStats = async (req, res) => {
         completedFilings,
         dueSoonFilings,
       },
-      businesses,
+      businesses: businessesWithCompliance,
     });
   } catch (error) {
     console.error("Dashboard stats error:", error.message);
