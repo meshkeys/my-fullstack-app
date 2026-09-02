@@ -1,4 +1,5 @@
 const prisma = require("../prisma/client");
+const { sendFilingConfirmationEmail } = require("../utils/emailService");
 
 // Filing costs in Naira
 const FILING_COSTS = {
@@ -143,6 +144,18 @@ const createFiling = async (req, res) => {
       },
     });
 
+    // Send confirmation email
+    try {
+      await sendFilingConfirmationEmail(
+        req.user.email,
+        req.user.fullName,
+        filingType,
+        business.businessName,
+      );
+    } catch (emailError) {
+      console.error("Filing confirmation email error:", emailError.message);
+    }
+
     res.status(201).json({
       success: true,
       message: "Filing submitted successfully!",
@@ -225,4 +238,5 @@ module.exports = {
   createFiling,
   getMyFilings,
   getFilingById,
+  sendFilingConfirmationEmail,
 };
