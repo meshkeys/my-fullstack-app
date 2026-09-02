@@ -1,11 +1,12 @@
-const Brevo = require("@getbrevo/brevo");
+const { BrevoClient } = require("@getbrevo/brevo");
 
 const sendEmail = async ({ to, subject, html }) => {
   try {
-    const apiInstance = new Brevo.TransactionalEmailsApi();
-    apiInstance.authentications["apiKey"].apiKey = process.env.BREVO_API_KEY;
+    const client = new BrevoClient({
+      apiKey: process.env.BREVO_API_KEY,
+    });
 
-    const sendSmtpEmail = {
+    await client.transactionalEmails.sendTransacEmail({
       sender: {
         name: process.env.FROM_NAME || "CAC Filing",
         email: process.env.FROM_EMAIL,
@@ -13,9 +14,8 @@ const sendEmail = async ({ to, subject, html }) => {
       to: [{ email: to }],
       subject,
       htmlContent: html,
-    };
+    });
 
-    await apiInstance.sendTransacEmail(sendSmtpEmail);
     console.log("Email sent successfully to:", to);
     return true;
   } catch (error) {
@@ -83,7 +83,7 @@ const sendFilingConfirmationEmail = async (
           <div style="background: #f0fdf4; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: left;">
             <p style="color: #166534; margin: 0;">✅ Filing received and logged</p>
             <p style="color: #166534; margin: 8px 0 0 0;">⏳ Our team will review within 1 hour</p>
-            <p style="color: #166534; margin: 8px 0 0 0;">📤 Filing will be submitted to CAC portal</p>
+            <p style="color: #166634; margin: 8px 0 0 0;">📤 Filing will be submitted to CAC portal</p>
           </div>
           <a href="${process.env.CLIENT_URL}/dashboard" style="background-color: #166534; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 16px;">
             View Dashboard
