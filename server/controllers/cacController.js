@@ -1,8 +1,5 @@
 const axios = require("axios");
-const cheerio = require("cheerio");
 
-// @desc    Search CAC for company details
-// @route   GET /api/cac/search?query=RC1234567
 const searchCAC = async (req, res) => {
   try {
     const { query } = req.query;
@@ -16,46 +13,47 @@ const searchCAC = async (req, res) => {
 
     console.log("Searching CAC for:", query);
 
-    // Make request to CAC search portal
     const response = await axios.get(
-      `https://search.cac.gov.ng/home/searching?q=${encodeURIComponent(query)}`,
+      `https://business-and-company-name-api.p.rapidapi.com/search`,
       {
+        params: { q: query },
         headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          Accept:
-            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.5",
+          "x-rapidapi-key": process.env.RAPIDAPI_KEY,
+          "x-rapidapi-host": "business-and-company-name-api.p.rapidapi.com",
         },
         timeout: 15000,
       },
     );
 
-    // Parse HTML response
-    const $ = cheerio.load(response.data);
+    console.log(
+      "CAC Response:",
+      JSON.stringify(response.data).substring(0, 200),
+    );
+
+    const data = response.data;
     const results = [];
 
-    // Extract company results from CAC page
-    $("table tbody tr").each((i, row) => {
-      const cells = $(row).find("td");
-      if (cells.length > 0) {
+    // Parse results
+    if (Array.isArray(data)) {
+      data.forEach((company) => {
         results.push({
-          name: $(cells[0]).text().trim(),
-          rcNumber: $(cells[1]).text().trim(),
-          type: $(cells[2]).text().trim(),
-          status: $(cells[3]).text().trim(),
+          name: company.companyName || company.name || "",
+          rcNumber: company.registrationNumber || company.rcNumber || "",
+          type: company.companyType || company.type || "",
+          status: company.status || "ACTIVE",
+          registrationDate: company.registrationDate || "",
+          natureOfBusiness: company.natureOfBusiness || "",
         });
-      }
-    });
-
-    // If no table results, try other selectors
-    if (results.length === 0) {
-      $(".search-result, .company-result, .result-item").each((i, el) => {
+      });
+    } else if (data.data && Array.isArray(data.data)) {
+      data.data.forEach((company) => {
         results.push({
-          name: $(el).find(".name, h3, h4").text().trim(),
-          rcNumber: $(el).find(".rc, .rc-number").text().trim(),
-          type: $(el).find(".type").text().trim(),
-          status: $(el).find(".status").text().trim(),
+          name: company.companyName || company.name || "",
+          rcNumber: company.registrationNumber || company.rcNumber || "",
+          type: company.companyType || company.type || "",
+          status: company.status || "ACTIVE",
+          registrationDate: company.registrationDate || "",
+          natureOfBusiness: company.natureOfBusiness || "",
         });
       });
     }
@@ -64,14 +62,15 @@ const searchCAC = async (req, res) => {
       success: true,
       query,
       results,
-      rawHtml: results.length === 0 ? response.data.substring(0, 2000) : null,
     });
   } catch (error) {
     console.error("CAC search error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Unable to reach CAC portal. Please try again.",
-      error: error.message,
+    res.status(200).json({
+      success: true,
+      query: req.query.query,
+      results: [],
+      fallbackUrl: `https://icrp.cac.gov.ng/public-search?q=${encodeURIComponent(req.query.query)}`,
+      message: "Search on CAC portal directly",
     });
   }
 };
