@@ -8,31 +8,32 @@ datasource db {
 }
 
 model User {
-  id          String     @id @default(uuid())
-  fullName    String
-  email       String     @unique
-  password    String
-  phoneNumber String?
+  id                String     @id @default(uuid())
+  fullName          String
+  email             String     @unique
+  password          String
+  phoneNumber       String?
   resetToken        String?
   resetTokenExpiry  DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  businesses  Business[]
+  isAdmin           Boolean    @default(false)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  businesses        Business[]
 }
 
 model Business {
-  id               String    @id @default(uuid())
+  id               String       @id @default(uuid())
   businessName     String
-  rcNumber         String?   @unique
+  rcNumber         String?      @unique
   businessType     BusinessType
   registrationDate DateTime?
   address          String?
   state            String?
-  status           String    @default("active")
+  status           String       @default("active")
   userId           String
-  user             User      @relation(fields: [userId], references: [id])
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  user             User         @relation(fields: [userId], references: [id])
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
   filings          Filing[]
   directors        Director[]
   trustees         Trustee[]
@@ -65,18 +66,33 @@ model Trustee {
 }
 
 model Filing {
-  id            String      @id @default(uuid())
-  filingType    FilingType
-  status        FilingStatus @default(PENDING)
-  dueDate       DateTime
-  submittedAt   DateTime?
-  completedAt   DateTime?
-  amount        Float?
-  notes         String?
-  businessId    String
-  business      Business    @relation(fields: [businessId], references: [id])
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id          String        @id @default(uuid())
+  filingType  FilingType
+  status      FilingStatus  @default(PENDING)
+  dueDate     DateTime
+  submittedAt DateTime?
+  completedAt DateTime?
+  amount      Float?
+  formData    Json?
+  businessId  String
+  business    Business      @relation(fields: [businessId], references: [id])
+  messages    FilingMessage[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model FilingMessage {
+  id              String        @id @default(uuid())
+  filingId        String
+  filing          Filing        @relation(fields: [filingId], references: [id])
+  sender          MessageSender
+  message         String
+  isRead          Boolean       @default(false)
+  requiresAction  Boolean       @default(false)
+  actionType      String?       // "UPLOAD_DOCUMENT" | "PROVIDE_INFO"
+  requestedDocs   Json?         // list of documents requested by agent
+  attachments     Json?         // uploaded file URLs from client
+  createdAt       DateTime      @default(now())
 }
 
 model Reminder {
@@ -111,8 +127,14 @@ enum FilingType {
 enum FilingStatus {
   PENDING
   IN_REVIEW
+  AWAITING_INFO
   PROCESSING
   SUBMITTED_TO_CAC
   COMPLETED
   REJECTED
+}
+
+enum MessageSender {
+  USER
+  AGENT
 }

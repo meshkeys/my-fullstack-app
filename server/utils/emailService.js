@@ -104,8 +104,76 @@ const sendFilingConfirmationEmail = async (
   });
 };
 
+const sendDocumentRequestEmail = async (
+  email,
+  fullName,
+  message,
+  requestedDocs,
+  filingUrl,
+) => {
+  const docsList = requestedDocs
+    .map(
+      (doc) =>
+        `<li style="color:#374151; font-size:14px; padding:4px 0;">${doc}</li>`,
+    )
+    .join("");
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family: Arial, sans-serif; background-color: #f0fdf4; margin: 0; padding: 20px;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden;">
+        <div style="background-color: #166534; padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">CAC Filing</h1>
+          <p style="color: #86efac; margin: 8px 0 0 0;">Action Required</p>
+        </div>
+        <div style="padding: 40px 30px;">
+          <h2 style="color: #166534;">📎 Documents Required</h2>
+          <p style="color: #374151;">Hi <strong>${fullName}</strong>,</p>
+          <p style="color: #374151;">Our legal agent has reviewed your filing and needs the following documents to proceed:</p>
+          
+          <div style="background: #f0fdf4; border-radius: 8px; padding: 16px; margin: 20px 0;">
+            <p style="color: #166534; font-weight: bold; margin: 0 0 8px 0;">Agent's Message:</p>
+            <p style="color: #374151; margin: 0;">${message}</p>
+          </div>
+
+          <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 16px; margin: 20px 0;">
+            <p style="color: #c2410c; font-weight: bold; margin: 0 0 8px 0;">📋 Documents Needed:</p>
+            <ul style="margin: 0; padding-left: 20px;">
+              ${docsList}
+            </ul>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${filingUrl}" 
+               style="background-color: #166534; color: white; padding: 14px 32px; 
+                      border-radius: 8px; text-decoration: none; font-weight: bold; 
+                      font-size: 16px; display: inline-block;">
+              Upload Documents Now →
+            </a>
+          </div>
+          <p style="color: #6b7280; font-size: 14px;">
+            Click the button above to log into your account and upload the required documents.
+          </p>
+        </div>
+        <div style="background: #f9fafb; padding: 20px; text-align: center;">
+          <p style="color: #9ca3af; font-size: 12px;">© 2024 CAC Filing. Helping Nigerian businesses stay compliant.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return sendEmail({
+    to: email,
+    subject: "⚠️ Action Required - Documents Needed for Your CAC Filing",
+    html,
+  });
+};
+
 module.exports = {
   sendEmail,
   sendPasswordResetEmail,
   sendFilingConfirmationEmail,
+  sendDocumentRequestEmail,
 };
