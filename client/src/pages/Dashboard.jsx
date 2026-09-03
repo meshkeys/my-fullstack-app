@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../utils/api";
@@ -16,6 +16,11 @@ function Dashboard() {
   const [businesses, setBusinesses] = useState([]);
   const [filings, setFilings] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Refs for scroll targets
+  const quickActionsRef = useRef(null);
+  const recentFilingsRef = useRef(null);
+  const myBusinessesRef = useRef(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -43,6 +48,11 @@ function Dashboard() {
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  // Scroll helper
+  const scrollTo = (ref) => {
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const formatBusinessType = (type) => {
@@ -124,10 +134,9 @@ function Dashboard() {
         </div>
       </nav>
 
-      {/* Main Content */}
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Welcome Banner */}
-        <div className="bg-green-800 text-white rounded-2xl p-6 md:p-8 mb-8">
+        <div className="bg-green-800 text-white rounded-2xl p-6 md:p-8 mb-6">
           <h1 className="text-2xl md:text-3xl font-bold">
             Welcome back, {user.fullName.split(" ")[0]}! 👋
           </h1>
@@ -150,37 +159,42 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* Stats Cards — clickable with scroll */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
             {
               label: "Total Filings",
               value: stats.totalFilings,
               icon: "📋",
               color: "bg-blue-50 text-blue-700",
+              ref: recentFilingsRef,
             },
             {
               label: "Pending",
               value: stats.pendingFilings,
               icon: "⏳",
               color: "bg-yellow-50 text-yellow-700",
+              ref: recentFilingsRef,
             },
             {
               label: "Completed",
               value: stats.completedFilings,
               icon: "✅",
               color: "bg-green-50 text-green-700",
+              ref: recentFilingsRef,
             },
             {
               label: "Due Soon",
               value: stats.dueSoonFilings,
               icon: "🔔",
               color: "bg-red-50 text-red-700",
+              ref: myBusinessesRef,
             },
           ].map((stat, i) => (
-            <div
+            <button
               key={i}
-              className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+              onClick={() => scrollTo(stat.ref)}
+              className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-left hover:shadow-md transition active:scale-95 cursor-pointer"
             >
               <div
                 className={`inline-block px-2 py-1 rounded-lg text-lg ${stat.color}`}
@@ -191,19 +205,73 @@ function Dashboard() {
                 {stat.value}
               </p>
               <p className="text-sm text-gray-500">{stat.label}</p>
-            </div>
+              <p className="text-xs text-green-600 mt-1">Tap to view →</p>
+            </button>
           ))}
         </div>
 
-        {/* Two Column Layout */}
+        {/* Main Layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="md:col-span-2 space-y-6">
-            {/* Recent Filings */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            {/* 1. Quick Actions — first on mobile */}
+            <div
+              ref={quickActionsRef}
+              className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
+            >
+              <h2 className="text-base font-bold text-gray-800 mb-4">
+                ⚡ Quick Actions
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  {
+                    icon: "📝",
+                    label: "Annual Returns",
+                    desc: "File yearly returns",
+                    type: "ANNUAL_RETURNS",
+                  },
+                  {
+                    icon: "👥",
+                    label: "Change Directors",
+                    desc: "Update director info",
+                    type: "CHANGE_OF_DIRECTORS",
+                  },
+                  {
+                    icon: "📍",
+                    label: "Change Address",
+                    desc: "Update address",
+                    type: "CHANGE_OF_ADDRESS",
+                  },
+                  {
+                    icon: "✏️",
+                    label: "Change Name",
+                    desc: "Update business name",
+                    type: "CHANGE_OF_NAME",
+                  },
+                ].map((action, i) => (
+                  <button
+                    key={i}
+                    onClick={() => navigate(`/new-filing?type=${action.type}`)}
+                    className="flex flex-col items-start gap-1 p-3 rounded-xl hover:bg-green-50 transition text-left border border-gray-100 cursor-pointer active:scale-95"
+                  >
+                    <span className="text-2xl">{action.icon}</span>
+                    <p className="text-sm font-medium text-gray-800">
+                      {action.label}
+                    </p>
+                    <p className="text-xs text-gray-400">{action.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 2. Recent Filings */}
+            <div
+              ref={recentFilingsRef}
+              className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
+            >
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-base font-bold text-gray-800">
-                  Recent Filings
+                  📋 Recent Filings
                 </h2>
                 <button
                   onClick={() => navigate("/new-filing")}
@@ -273,11 +341,14 @@ function Dashboard() {
               )}
             </div>
 
-            {/* My Businesses */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            {/* 3. My Businesses */}
+            <div
+              ref={myBusinessesRef}
+              className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
+            >
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-base font-bold text-gray-800">
-                  My Businesses
+                  🏢 My Businesses
                 </h2>
                 <button
                   onClick={() => navigate("/business/setup")}
@@ -343,7 +414,6 @@ function Dashboard() {
                           </div>
                         )}
 
-                      {/* Business Card Body */}
                       <div className="p-3 hover:bg-green-50 transition cursor-pointer">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
@@ -488,71 +558,56 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 h-fit">
-            <h2 className="text-base font-bold text-gray-800 mb-4">
-              Quick Actions
-            </h2>
-            <div className="space-y-2">
-              {[
-                {
-                  icon: "📝",
-                  label: "Annual Returns",
-                  desc: "File your yearly returns",
-                  type: "ANNUAL_RETURNS",
-                },
-                {
-                  icon: "👥",
-                  label: "Change Directors",
-                  desc: "Update director info",
-                  type: "CHANGE_OF_DIRECTORS",
-                },
-                {
-                  icon: "📍",
-                  label: "Change Address",
-                  desc: "Update business address",
-                  type: "CHANGE_OF_ADDRESS",
-                },
-                {
-                  icon: "✏️",
-                  label: "Change Name",
-                  desc: "Update business name",
-                  type: "CHANGE_OF_NAME",
-                },
-              ].map((action, i) => (
-                <button
-                  key={i}
-                  onClick={() => navigate(`/new-filing?type=${action.type}`)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 transition text-left border border-gray-100 cursor-pointer"
-                >
-                  <span className="text-lg">{action.icon}</span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">
-                      {action.label}
-                    </p>
-                    <p className="text-xs text-gray-400">{action.desc}</p>
-                  </div>
-                  <span className="text-green-600 text-sm">→</span>
-                </button>
-              ))}
-            </div>
-
-            {businesses.length === 0 && (
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
-                <p className="text-xs font-semibold text-yellow-800">
-                  ⚠️ Add Your Business
-                </p>
-                <p className="text-xs text-yellow-700 mt-1">
-                  Add a business to start filing
-                </p>
-                <button
-                  onClick={() => navigate("/business/setup")}
-                  className="mt-2 text-xs text-yellow-800 font-medium underline"
-                >
-                  Add Business →
-                </button>
+          {/* Right Column — hidden on mobile, visible on desktop */}
+          <div className="hidden md:block space-y-6">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <h2 className="text-base font-bold text-gray-800 mb-4">
+                Quick Actions
+              </h2>
+              <div className="space-y-2">
+                {[
+                  {
+                    icon: "📝",
+                    label: "Annual Returns",
+                    desc: "File your yearly returns",
+                    type: "ANNUAL_RETURNS",
+                  },
+                  {
+                    icon: "👥",
+                    label: "Change Directors",
+                    desc: "Update director info",
+                    type: "CHANGE_OF_DIRECTORS",
+                  },
+                  {
+                    icon: "📍",
+                    label: "Change Address",
+                    desc: "Update business address",
+                    type: "CHANGE_OF_ADDRESS",
+                  },
+                  {
+                    icon: "✏️",
+                    label: "Change Name",
+                    desc: "Update business name",
+                    type: "CHANGE_OF_NAME",
+                  },
+                ].map((action, i) => (
+                  <button
+                    key={i}
+                    onClick={() => navigate(`/new-filing?type=${action.type}`)}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 transition text-left border border-gray-100 cursor-pointer"
+                  >
+                    <span className="text-lg">{action.icon}</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-800">
+                        {action.label}
+                      </p>
+                      <p className="text-xs text-gray-400">{action.desc}</p>
+                    </div>
+                    <span className="text-green-600 text-sm">→</span>
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
