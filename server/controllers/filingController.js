@@ -1,7 +1,6 @@
 const prisma = require("../prisma/client");
 const { sendFilingConfirmationEmail } = require("../utils/emailService");
 
-// Filing costs in Naira
 const FILING_COSTS = {
   ANNUAL_RETURNS: 15000,
   CHANGE_OF_DIRECTORS: 25000,
@@ -11,8 +10,117 @@ const FILING_COSTS = {
   AUDITED_ACCOUNTS: 20000,
 };
 
-// @desc    Get filing types with costs
-// @route   GET /api/filings/types
+const REQUIRED_DOCUMENTS = {
+  ANNUAL_RETURNS: [
+    {
+      id: "cac_certificate",
+      label: "CAC Registration Certificate",
+      required: true,
+    },
+    {
+      id: "tax_clearance",
+      label: "Tax Clearance Certificate (TCC)",
+      required: true,
+    },
+    {
+      id: "financial_statements",
+      label: "Audited Financial Statements",
+      required: false,
+    },
+    {
+      id: "valid_id",
+      label: "Valid ID of Director/Proprietor",
+      required: true,
+    },
+  ],
+  CHANGE_OF_DIRECTORS: [
+    {
+      id: "cac_certificate",
+      label: "CAC Registration Certificate",
+      required: true,
+    },
+    {
+      id: "board_resolution",
+      label: "Board Resolution Approving Change",
+      required: true,
+    },
+    {
+      id: "valid_id",
+      label: "Valid ID of New/Outgoing Director",
+      required: true,
+    },
+    {
+      id: "passport_photo",
+      label: "Passport Photograph of New Director",
+      required: true,
+    },
+  ],
+  CHANGE_OF_ADDRESS: [
+    {
+      id: "cac_certificate",
+      label: "CAC Registration Certificate",
+      required: true,
+    },
+    {
+      id: "board_resolution",
+      label: "Board Resolution Approving New Address",
+      required: true,
+    },
+    {
+      id: "proof_of_address",
+      label: "Proof of New Address (Utility Bill/Tenancy)",
+      required: true,
+    },
+  ],
+  CHANGE_OF_NAME: [
+    {
+      id: "cac_certificate",
+      label: "CAC Registration Certificate",
+      required: true,
+    },
+    {
+      id: "board_resolution",
+      label: "Board Resolution Approving Name Change",
+      required: true,
+    },
+    {
+      id: "name_availability",
+      label: "Evidence of Name Availability Search",
+      required: true,
+    },
+  ],
+  INCREASE_SHARE_CAPITAL: [
+    {
+      id: "cac_certificate",
+      label: "CAC Registration Certificate",
+      required: true,
+    },
+    {
+      id: "board_resolution",
+      label: "Board Resolution Approving Increase",
+      required: true,
+    },
+    {
+      id: "shareholders_resolution",
+      label: "Shareholders Resolution",
+      required: true,
+    },
+  ],
+  AUDITED_ACCOUNTS: [
+    {
+      id: "cac_certificate",
+      label: "CAC Registration Certificate",
+      required: true,
+    },
+    {
+      id: "audited_accounts",
+      label: "Signed Audited Financial Accounts",
+      required: true,
+    },
+    { id: "auditor_report", label: "Auditor's Report", required: true },
+  ],
+};
+
 const getFilingTypes = async (req, res) => {
   try {
     const filingTypes = [
@@ -21,13 +129,7 @@ const getFilingTypes = async (req, res) => {
         label: "Annual Returns",
         description: "File your yearly annual returns with CAC",
         cost: FILING_COSTS.ANNUAL_RETURNS,
-        requiredFor: [
-          "BUSINESS_NAME",
-          "PRIVATE_LIMITED_COMPANY",
-          "PUBLIC_LIMITED_COMPANY",
-          "INCORPORATED_TRUSTEE",
-          "LIMITED_LIABILITY_PARTNERSHIP",
-        ],
+        requiredDocuments: REQUIRED_DOCUMENTS.ANNUAL_RETURNS,
         estimatedTime: "24-48 hours",
         icon: "📝",
       },
@@ -36,7 +138,7 @@ const getFilingTypes = async (req, res) => {
         label: "Change of Directors",
         description: "Add, remove or update director information",
         cost: FILING_COSTS.CHANGE_OF_DIRECTORS,
-        requiredFor: ["PRIVATE_LIMITED_COMPANY", "PUBLIC_LIMITED_COMPANY"],
+        requiredDocuments: REQUIRED_DOCUMENTS.CHANGE_OF_DIRECTORS,
         estimatedTime: "48-72 hours",
         icon: "👥",
       },
@@ -45,12 +147,7 @@ const getFilingTypes = async (req, res) => {
         label: "Change of Address",
         description: "Update your registered business address",
         cost: FILING_COSTS.CHANGE_OF_ADDRESS,
-        requiredFor: [
-          "BUSINESS_NAME",
-          "PRIVATE_LIMITED_COMPANY",
-          "PUBLIC_LIMITED_COMPANY",
-          "INCORPORATED_TRUSTEE",
-        ],
+        requiredDocuments: REQUIRED_DOCUMENTS.CHANGE_OF_ADDRESS,
         estimatedTime: "24-48 hours",
         icon: "📍",
       },
@@ -59,11 +156,7 @@ const getFilingTypes = async (req, res) => {
         label: "Change of Name",
         description: "Change your registered business name",
         cost: FILING_COSTS.CHANGE_OF_NAME,
-        requiredFor: [
-          "BUSINESS_NAME",
-          "PRIVATE_LIMITED_COMPANY",
-          "PUBLIC_LIMITED_COMPANY",
-        ],
+        requiredDocuments: REQUIRED_DOCUMENTS.CHANGE_OF_NAME,
         estimatedTime: "5-7 days",
         icon: "✏️",
       },
@@ -72,7 +165,7 @@ const getFilingTypes = async (req, res) => {
         label: "Increase Share Capital",
         description: "Increase your company share capital",
         cost: FILING_COSTS.INCREASE_SHARE_CAPITAL,
-        requiredFor: ["PRIVATE_LIMITED_COMPANY", "PUBLIC_LIMITED_COMPANY"],
+        requiredDocuments: REQUIRED_DOCUMENTS.INCREASE_SHARE_CAPITAL,
         estimatedTime: "5-7 days",
         icon: "💰",
       },
@@ -81,27 +174,19 @@ const getFilingTypes = async (req, res) => {
         label: "Audited Accounts",
         description: "Submit your audited financial accounts",
         cost: FILING_COSTS.AUDITED_ACCOUNTS,
-        requiredFor: ["PRIVATE_LIMITED_COMPANY", "PUBLIC_LIMITED_COMPANY"],
+        requiredDocuments: REQUIRED_DOCUMENTS.AUDITED_ACCOUNTS,
         estimatedTime: "48-72 hours",
         icon: "📊",
       },
     ];
 
-    res.status(200).json({
-      success: true,
-      filingTypes,
-    });
+    res.status(200).json({ success: true, filingTypes });
   } catch (error) {
     console.error("Get filing types error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Something went wrong. Please try again.",
-    });
+    res.status(500).json({ success: false, message: "Something went wrong." });
   }
 };
 
-// @desc    Create a new filing
-// @route   POST /api/filings
 const createFiling = async (req, res) => {
   try {
     const { filingType, businessId, formData } = req.body;
@@ -113,12 +198,8 @@ const createFiling = async (req, res) => {
       });
     }
 
-    // Verify business belongs to user
     const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        userId: req.user.id,
-      },
+      where: { id: businessId, userId: req.user.id },
     });
 
     if (!business) {
@@ -128,11 +209,19 @@ const createFiling = async (req, res) => {
       });
     }
 
-    // Calculate due date (30 days from now)
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 30);
 
-    // Create filing
+    // Get uploaded document URLs from Cloudinary
+    const uploadedDocuments = req.files
+      ? req.files.map((file) => ({
+          fieldname: file.fieldname,
+          originalname: file.originalname,
+          url: file.path,
+          publicId: file.filename,
+        }))
+      : [];
+
     const filing = await prisma.filing.create({
       data: {
         filingType,
@@ -140,7 +229,10 @@ const createFiling = async (req, res) => {
         dueDate,
         businessId,
         amount: FILING_COSTS[filingType],
-        notes: JSON.stringify(formData),
+        notes: JSON.stringify({
+          formData: JSON.parse(formData),
+          documents: uploadedDocuments,
+        }),
       },
     });
 
@@ -170,8 +262,6 @@ const createFiling = async (req, res) => {
   }
 };
 
-// @desc    Get all filings for user
-// @route   GET /api/filings
 const getMyFilings = async (req, res) => {
   try {
     const businesses = await prisma.business.findMany({
@@ -182,30 +272,18 @@ const getMyFilings = async (req, res) => {
     const businessIds = businesses.map((b) => b.id);
 
     const filings = await prisma.filing.findMany({
-      where: {
-        businessId: { in: businessIds },
-      },
-      include: {
-        business: true,
-      },
+      where: { businessId: { in: businessIds } },
+      include: { business: true },
       orderBy: { createdAt: "desc" },
     });
 
-    res.status(200).json({
-      success: true,
-      filings,
-    });
+    res.status(200).json({ success: true, filings });
   } catch (error) {
     console.error("Get filings error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Something went wrong. Please try again.",
-    });
+    res.status(500).json({ success: false, message: "Something went wrong." });
   }
 };
 
-// @desc    Get single filing
-// @route   GET /api/filings/:id
 const getFilingById = async (req, res) => {
   try {
     const filing = await prisma.filing.findFirst({
@@ -214,29 +292,16 @@ const getFilingById = async (req, res) => {
     });
 
     if (!filing) {
-      return res.status(404).json({
-        success: false,
-        message: "Filing not found",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Filing not found" });
     }
 
-    res.status(200).json({
-      success: true,
-      filing,
-    });
+    res.status(200).json({ success: true, filing });
   } catch (error) {
     console.error("Get filing error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Something went wrong. Please try again.",
-    });
+    res.status(500).json({ success: false, message: "Something went wrong." });
   }
 };
 
-module.exports = {
-  getFilingTypes,
-  createFiling,
-  getMyFilings,
-  getFilingById,
-  sendFilingConfirmationEmail,
-};
+module.exports = { getFilingTypes, createFiling, getMyFilings, getFilingById };

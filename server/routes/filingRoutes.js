@@ -7,11 +7,12 @@ const {
   getFilingById,
 } = require("../controllers/filingController");
 const { protect } = require("../middleware/authMiddleware");
+const { upload } = require("../middleware/uploadMiddleware");
 
 router.use(protect);
 
 router.get("/types", getFilingTypes);
-router.post("/", createFiling);
+router.post("/", upload.array("documents", 10), createFiling);
 router.get("/", getMyFilings);
 router.get("/:id", getFilingById);
 
