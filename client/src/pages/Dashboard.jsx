@@ -557,58 +557,6 @@ function Dashboard() {
               )}
             </div>
           </div>
-
-          {/* Right Column — hidden on mobile, visible on desktop */}
-          <div className="hidden md:block space-y-6">
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <h2 className="text-base font-bold text-gray-800 mb-4">
-                Quick Actions
-              </h2>
-              <div className="space-y-2">
-                {[
-                  {
-                    icon: "📝",
-                    label: "Annual Returns",
-                    desc: "File your yearly returns",
-                    type: "ANNUAL_RETURNS",
-                  },
-                  {
-                    icon: "👥",
-                    label: "Change Directors",
-                    desc: "Update director info",
-                    type: "CHANGE_OF_DIRECTORS",
-                  },
-                  {
-                    icon: "📍",
-                    label: "Change Address",
-                    desc: "Update business address",
-                    type: "CHANGE_OF_ADDRESS",
-                  },
-                  {
-                    icon: "✏️",
-                    label: "Change Name",
-                    desc: "Update business name",
-                    type: "CHANGE_OF_NAME",
-                  },
-                ].map((action, i) => (
-                  <button
-                    key={i}
-                    onClick={() => navigate(`/new-filing?type=${action.type}`)}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 transition text-left border border-gray-100 cursor-pointer"
-                  >
-                    <span className="text-lg">{action.icon}</span>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-800">
-                        {action.label}
-                      </p>
-                      <p className="text-xs text-gray-400">{action.desc}</p>
-                    </div>
-                    <span className="text-green-600 text-sm">→</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
