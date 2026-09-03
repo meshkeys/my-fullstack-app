@@ -200,9 +200,9 @@ function Dashboard() {
           {/* Left Column */}
           <div className="md:col-span-2 space-y-6">
             {/* Recent Filings */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-gray-800">
+                <h2 className="text-base font-bold text-gray-800">
                   Recent Filings
                 </h2>
                 <button
@@ -213,15 +213,17 @@ function Dashboard() {
                 </button>
               </div>
               {filings.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-5xl mb-4">📭</div>
-                  <p className="text-gray-500 font-medium">No filings yet</p>
-                  <p className="text-gray-400 text-sm mt-1">
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-3">📭</div>
+                  <p className="text-gray-500 font-medium text-sm">
+                    No filings yet
+                  </p>
+                  <p className="text-gray-400 text-xs mt-1">
                     Start your first CAC filing to see it here
                   </p>
                   <button
                     onClick={() => navigate("/new-filing")}
-                    className="mt-4 px-6 py-2 bg-green-800 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition"
+                    className="mt-3 px-5 py-2 bg-green-800 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition"
                   >
                     Start Filing
                   </button>
@@ -231,14 +233,14 @@ function Dashboard() {
                   {filings.slice(0, 5).map((filing) => (
                     <div
                       key={filing.id}
-                      className="p-4 border border-gray-100 rounded-xl hover:bg-green-50 transition"
+                      className="p-3 border border-gray-100 rounded-xl hover:bg-green-50 transition"
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-semibold text-gray-800">
+                          <p className="font-semibold text-gray-800 text-sm">
                             {formatFilingType(filing.filingType)}
                           </p>
-                          <p className="text-sm text-gray-500 mt-1">
+                          <p className="text-xs text-gray-500 mt-1">
                             {filing.business?.businessName}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
@@ -252,7 +254,7 @@ function Dashboard() {
                             )}
                           </p>
                         </div>
-                        <div className="flex flex-col items-end gap-2">
+                        <div className="flex flex-col items-end gap-1">
                           <span
                             className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(filing.status)}`}
                           >
@@ -272,190 +274,226 @@ function Dashboard() {
             </div>
 
             {/* My Businesses */}
-<div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-  <div className="flex justify-between items-center mb-4">
-    <h2 className="text-lg font-bold text-gray-800">My Businesses</h2>
-    <button
-      onClick={() => navigate("/business/setup")}
-      className="text-sm text-green-700 hover:underline"
-    >
-      + Add New
-    </button>
-  </div>
-
-  {loading ? (
-    <div className="text-center py-8 text-gray-400">Loading...</div>
-  ) : businesses.length === 0 ? (
-    <div className="text-center py-12">
-      <div className="text-5xl mb-4">🏢</div>
-      <p className="text-gray-500 font-medium">No businesses yet</p>
-      <button
-        onClick={() => navigate("/business/setup")}
-        className="mt-4 px-6 py-2 bg-green-800 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition"
-      >
-        Add Business
-      </button>
-    </div>
-  ) : (
-    <div className="space-y-4">
-      {businesses.map((business) => (
-        <div key={business.id} className="border border-gray-100 rounded-2xl overflow-hidden">
-          
-          {/* Compliance Alert Banner */}
-          {business.complianceInfo && business.complianceInfo.complianceStatus !== 'good' && (
-            <div className={`px-4 py-2 flex items-center gap-2 text-sm font-medium ${
-              business.complianceInfo.complianceColor === 'red'
-                ? 'bg-red-50 text-red-700 border-b border-red-100'
-                : 'bg-amber-50 text-amber-700 border-b border-amber-100'
-            }`}>
-              <span>
-                {business.complianceInfo.complianceColor === 'red' ? '🔴' : '🟡'}
-              </span>
-              {business.complianceInfo.complianceMessage}
-              <button
-                onClick={() => navigate(`/new-filing?type=ANNUAL_RETURNS`)}
-                className={`ml-auto text-xs px-2 py-1 rounded-lg font-medium ${
-                  business.complianceInfo.complianceColor === 'red'
-                    ? 'bg-red-700 text-white hover:bg-red-800'
-                    : 'bg-amber-600 text-white hover:bg-amber-700'
-                } transition`}
-              >
-                File Now →
-              </button>
-            </div>
-          )}
-
-          {/* Business Card Body */}
-          <div className="p-4 hover:bg-green-50 transition cursor-pointer">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-bold text-gray-800">{business.businessName}</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    business.status === "active"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}>
-                    {business.status}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  {formatBusinessType(business.businessType)}
-                </p>
-                {business.rcNumber && (
-                  <p className="text-xs text-green-700 mt-1 font-medium">
-                    RC: {business.rcNumber}
-                  </p>
-                )}
-              </div>
-              <div className="text-right">
-                <span className="text-xs text-gray-400">
-                  {business.filings.length} filing(s)
-                </span>
-              </div>
-            </div>
-
-            {/* Compliance Timeline */}
-            {business.complianceInfo && business.registrationDate && (
-              <div className="mt-3 pt-3 border-t border-gray-100">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-xs text-gray-400">Date Registered</p>
-                    <p className="text-sm font-medium text-gray-700">
-                      {new Date(business.registrationDate).toLocaleDateString('en-NG', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
-                      })}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Next Filing Due</p>
-                    <p className={`text-sm font-medium ${
-                      business.complianceInfo.complianceColor === 'red'
-                        ? 'text-red-600'
-                        : business.complianceInfo.complianceColor === 'amber'
-                        ? 'text-amber-600'
-                        : 'text-green-600'
-                    }`}>
-                      {new Date(business.complianceInfo.nextDueDate).toLocaleDateString('en-NG', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
-                      })}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Compliance Progress Bar */}
-                <div className="mt-3">
-                  <div className="flex justify-between text-xs text-gray-400 mb-1">
-                    <span>Compliance Status</span>
-                    <span className={`font-medium ${
-                      business.complianceInfo.complianceColor === 'red'
-                        ? 'text-red-600'
-                        : business.complianceInfo.complianceColor === 'amber'
-                        ? 'text-amber-600'
-                        : 'text-green-600'
-                    }`}>
-                      {business.complianceInfo.complianceStatus === 'good' && '✅ Good Standing'}
-                      {business.complianceInfo.complianceStatus === 'warning' && '⚠️ Due Soon'}
-                      {business.complianceInfo.complianceStatus === 'critical' && '🔴 Critical'}
-                      {business.complianceInfo.complianceStatus === 'overdue' && '🔴 Overdue'}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all ${
-                        business.complianceInfo.complianceColor === 'red'
-                          ? 'bg-red-500'
-                          : business.complianceInfo.complianceColor === 'amber'
-                          ? 'bg-amber-400'
-                          : 'bg-green-500'
-                      }`}
-                      style={{
-                        width: `${Math.min(100, Math.max(5,
-                          business.complianceInfo.daysUntilDue > 365
-                            ? 100
-                            : (business.complianceInfo.daysUntilDue / 365) * 100
-                        ))}%`
-                      }}
-                    />
-                  </div>
-                </div>
-
-              </div>
-            )}
-
-            {/* No registration date message */}
-            {!business.registrationDate && (
-              <div className="mt-3 pt-3 border-t border-gray-100">
-                <p className="text-xs text-amber-600">
-                  ⚠️ Add your registration date to track compliance deadlines
-                </p>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-base font-bold text-gray-800">
+                  My Businesses
+                </h2>
                 <button
-                  onClick={() => navigate('/business/setup')}
-                  className="text-xs text-green-700 underline mt-1"
+                  onClick={() => navigate("/business/setup")}
+                  className="text-sm text-green-700 hover:underline"
                 >
-                  Update Business Profile →
+                  + Add New
                 </button>
               </div>
-            )}
 
-          </div>
-        </div>
-      ))}
-    </div>
-  )}
-          </div>
+              {loading ? (
+                <div className="text-center py-8 text-gray-400 text-sm">
+                  Loading...
+                </div>
+              ) : businesses.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-3">🏢</div>
+                  <p className="text-gray-500 font-medium text-sm">
+                    No businesses yet
+                  </p>
+                  <button
+                    onClick={() => navigate("/business/setup")}
+                    className="mt-3 px-5 py-2 bg-green-800 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition"
+                  >
+                    Add Business
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {businesses.map((business) => (
+                    <div
+                      key={business.id}
+                      className="border border-gray-100 rounded-xl overflow-hidden"
+                    >
+                      {/* Compliance Alert Banner */}
+                      {business.complianceInfo &&
+                        business.complianceInfo.complianceStatus !== "good" && (
+                          <div
+                            className={`px-3 py-2 flex items-center gap-2 text-xs font-medium ${
+                              business.complianceInfo.complianceColor === "red"
+                                ? "bg-red-50 text-red-700 border-b border-red-100"
+                                : "bg-amber-50 text-amber-700 border-b border-amber-100"
+                            }`}
+                          >
+                            <span>
+                              {business.complianceInfo.complianceColor === "red"
+                                ? "🔴"
+                                : "🟡"}
+                            </span>
+                            {business.complianceInfo.complianceMessage}
+                            <button
+                              onClick={() =>
+                                navigate(`/new-filing?type=ANNUAL_RETURNS`)
+                              }
+                              className={`ml-auto text-xs px-2 py-1 rounded-lg font-medium ${
+                                business.complianceInfo.complianceColor ===
+                                "red"
+                                  ? "bg-red-700 text-white"
+                                  : "bg-amber-600 text-white"
+                              } transition`}
+                            >
+                              File Now →
+                            </button>
+                          </div>
+                        )}
+
+                      {/* Business Card Body */}
+                      <div className="p-3 hover:bg-green-50 transition cursor-pointer">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-bold text-gray-800 text-sm">
+                                {business.businessName}
+                              </p>
+                              <span
+                                className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                  business.status === "active"
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-red-100 text-red-700"
+                                }`}
+                              >
+                                {business.status}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {formatBusinessType(business.businessType)}
+                            </p>
+                            {business.rcNumber && (
+                              <p className="text-xs text-green-700 mt-1 font-medium">
+                                RC: {business.rcNumber}
+                              </p>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-400">
+                            {business.filings.length} filing(s)
+                          </span>
+                        </div>
+
+                        {/* Compliance Timeline */}
+                        {business.complianceInfo &&
+                          business.registrationDate && (
+                            <div className="mt-3 pt-3 border-t border-gray-100">
+                              <div className="grid grid-cols-2 gap-2 mb-2">
+                                <div>
+                                  <p className="text-xs text-gray-400">
+                                    Date Registered
+                                  </p>
+                                  <p className="text-xs font-medium text-gray-700">
+                                    {new Date(
+                                      business.registrationDate,
+                                    ).toLocaleDateString("en-NG", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-400">
+                                    Next Filing Due
+                                  </p>
+                                  <p
+                                    className={`text-xs font-medium ${
+                                      business.complianceInfo
+                                        .complianceColor === "red"
+                                        ? "text-red-600"
+                                        : business.complianceInfo
+                                              .complianceColor === "amber"
+                                          ? "text-amber-600"
+                                          : "text-green-600"
+                                    }`}
+                                  >
+                                    {new Date(
+                                      business.complianceInfo.nextDueDate,
+                                    ).toLocaleDateString("en-NG", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex justify-between text-xs text-gray-400 mb-1">
+                                <span>Compliance</span>
+                                <span
+                                  className={`font-medium ${
+                                    business.complianceInfo.complianceColor ===
+                                    "red"
+                                      ? "text-red-600"
+                                      : business.complianceInfo
+                                            .complianceColor === "amber"
+                                        ? "text-amber-600"
+                                        : "text-green-600"
+                                  }`}
+                                >
+                                  {business.complianceInfo.complianceStatus ===
+                                    "good" && "✅ Good Standing"}
+                                  {business.complianceInfo.complianceStatus ===
+                                    "warning" && "⚠️ Due Soon"}
+                                  {business.complianceInfo.complianceStatus ===
+                                    "critical" && "🔴 Critical"}
+                                  {business.complianceInfo.complianceStatus ===
+                                    "overdue" && "🔴 Overdue"}
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-100 rounded-full h-1.5">
+                                <div
+                                  className={`h-1.5 rounded-full transition-all ${
+                                    business.complianceInfo.complianceColor ===
+                                    "red"
+                                      ? "bg-red-500"
+                                      : business.complianceInfo
+                                            .complianceColor === "amber"
+                                        ? "bg-amber-400"
+                                        : "bg-green-500"
+                                  }`}
+                                  style={{
+                                    width: `${Math.min(
+                                      100,
+                                      Math.max(
+                                        5,
+                                        business.complianceInfo.daysUntilDue >
+                                          365
+                                          ? 100
+                                          : (business.complianceInfo
+                                              .daysUntilDue /
+                                              365) *
+                                              100,
+                                      ),
+                                    )}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                        {!business.registrationDate && (
+                          <div className="mt-2 pt-2 border-t border-gray-100">
+                            <p className="text-xs text-amber-600">
+                              ⚠️ Add registration date to track compliance
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 h-fit">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 h-fit">
+            <h2 className="text-base font-bold text-gray-800 mb-4">
               Quick Actions
             </h2>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {[
                 {
                   icon: "📝",
@@ -487,19 +525,18 @@ function Dashboard() {
                   onClick={() => navigate(`/new-filing?type=${action.type}`)}
                   className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 transition text-left border border-gray-100 cursor-pointer"
                 >
-                  <span className="text-xl">{action.icon}</span>
-                  <div>
+                  <span className="text-lg">{action.icon}</span>
+                  <div className="flex-1">
                     <p className="text-sm font-medium text-gray-800">
                       {action.label}
                     </p>
                     <p className="text-xs text-gray-400">{action.desc}</p>
                   </div>
-                  <span className="ml-auto text-green-600">→</span>
+                  <span className="text-green-600 text-sm">→</span>
                 </button>
               ))}
             </div>
 
-            {/* Compliance reminder */}
             {businesses.length === 0 && (
               <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
                 <p className="text-xs font-semibold text-yellow-800">
