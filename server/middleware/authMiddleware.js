@@ -1,18 +1,21 @@
-const jwt = require('jsonwebtoken');
-const prisma = require('../prisma/client');
+const jwt = require("jsonwebtoken");
+const prisma = require("../prisma/client");
 
 const protect = async (req, res, next) => {
   try {
     let token;
 
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
     }
 
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized, please log in'
+        message: "Not authorized, please log in",
       });
     }
 
@@ -24,25 +27,25 @@ const protect = async (req, res, next) => {
         id: true,
         fullName: true,
         email: true,
-        phoneNumber: true
-      }
+        phoneNumber: true,
+        isAdmin: true,
+      },
     });
 
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'User no longer exists'
+        message: "User no longer exists",
       });
     }
 
     req.user = user;
     next();
-
   } catch (error) {
-    console.error('Auth middleware error:', error.message);
+    console.error("Auth middleware error:", error.message);
     return res.status(401).json({
       success: false,
-      message: 'Not authorized, token failed'
+      message: "Not authorized, token failed",
     });
   }
 };

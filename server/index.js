@@ -7,6 +7,7 @@ const cacRoutes = require("./routes/cacRoutes");
 const authRoutes = require("./routes/authRoutes");
 const businessRoutes = require("./routes/businessRoutes");
 const filingRoutes = require("./routes/filingRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/business", businessRoutes);
 app.use("/api/filings", filingRoutes);
 app.use("/api/cac", cacRoutes);
+app.use("/api/admin", adminRoutes);
 app.get("/", (req, res) => {
   res.json({ message: "CAC Filing API is running! 🚀" });
 });
