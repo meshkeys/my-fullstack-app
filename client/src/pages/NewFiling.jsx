@@ -1,10 +1,46 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../utils/api";
 
-// Intake form sections per filing type
+// Format number with commas
+const formatNumber = (value) => {
+  if (!value) return "";
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+
+const unformatNumber = (value) => {
+  if (!value) return "";
+  return value.toString().replace(/,/g, "");
+};
+
 const INTAKE_FORMS = {
   ANNUAL_RETURNS: [
+    {
+      section: "Company Type",
+      icon: "🏢",
+      fields: [
+        {
+          name: "isSmallCompany",
+          label: "Is this a small company?",
+          type: "select",
+          required: true,
+          options: [
+            "Yes — turnover under ₦120m and net assets under ₦60m",
+            "No — above the small company threshold",
+          ],
+          hint: "Small companies under CAMA 2020 are exempt from holding AGMs",
+        },
+        {
+          name: "businessNameType",
+          label: "Is this a Business Name (sole proprietor/partnership)?",
+          type: "select",
+          required: true,
+          options: ["Yes — Business Name", "No — Limited Company or other"],
+          hint: "Business names file by 30th June annually without AGM requirement",
+        },
+      ],
+    },
     {
       section: "Financial Information",
       icon: "💰",
@@ -14,27 +50,19 @@ const INTAKE_FORMS = {
           label: "Financial Year End Date",
           type: "date",
           required: true,
-          hint: "The last day of your company's financial year",
+          hint: "The last day of your company's financial year e.g 31st December 2024",
         },
         {
           name: "turnover",
           label: "Total Annual Turnover (₦)",
-          type: "number",
+          type: "number_formatted",
           required: true,
-          hint: "Total revenue generated during the year",
-        },
-        {
-          name: "isSmallCompany",
-          label: "Is this a small company?",
-          type: "select",
-          required: true,
-          options: ["Yes (turnover under ₦120m)", "No (turnover above ₦120m)"],
-          hint: "Small companies file abridged accounts",
+          hint: "Total revenue generated during the year e.g 5,000,000",
         },
         {
           name: "netAssets",
           label: "Net Assets Value (₦)",
-          type: "number",
+          type: "number_formatted",
           required: true,
           hint: "Total assets minus total liabilities",
         },
@@ -43,71 +71,135 @@ const INTAKE_FORMS = {
           label: "Number of Employees",
           type: "number",
           required: true,
+          hint: "Total number of staff including part-time",
         },
       ],
     },
     {
       section: "Company Information",
-      icon: "🏢",
+      icon: "📋",
       fields: [
         {
           name: "natureOfBusiness",
           label: "Principal Business Activities",
           type: "textarea",
           required: true,
-          hint: "Describe what your company does",
+          hint: "Describe what your company does e.g Trading in general merchandise",
         },
         {
           name: "registeredAddress",
           label: "Current Registered Address",
           type: "textarea",
           required: true,
+          hint: "Your official address as registered with CAC",
         },
         {
           name: "hasAddressChanged",
-          label: "Has your registered address changed this year?",
+          label: "Has your registered address changed since last filing?",
           type: "select",
           required: true,
-          options: ["Yes", "No"],
+          options: ["No", "Yes"],
+        },
+        {
+          name: "newAddress",
+          label: "New Registered Address",
+          type: "textarea",
+          required: false,
+          hint: "Only fill if address has changed",
+          showIf: { field: "hasAddressChanged", value: "Yes" },
         },
         {
           name: "lastAGMDate",
           label: "Date of Last Annual General Meeting (AGM)",
           type: "date",
-          required: true,
+          required: false,
+          hint: "Leave blank if you are a small company or business name — AGM not required",
+          showIfNot: {
+            field: "isSmallCompany",
+            value: "Yes — turnover under ₦120m and net assets under ₦60m",
+          },
         },
       ],
     },
     {
-      section: "Directors & Shareholders",
+      section: "Directors Information",
       icon: "👥",
       fields: [
         {
           name: "hasDirectorChanged",
-          label: "Any changes to directors this year?",
+          label: "Any changes to directors since last filing?",
           type: "select",
           required: true,
-          options: ["Yes", "No"],
+          options: ["No", "Yes"],
+        },
+        {
+          name: "director1Name",
+          label: "Director 1 — Full Name",
+          type: "text",
+          required: true,
+          hint: "Full legal name as on ID",
+        },
+        {
+          name: "director1Address",
+          label: "Director 1 — Residential Address",
+          type: "textarea",
+          required: true,
+        },
+        {
+          name: "director1Nationality",
+          label: "Director 1 — Nationality",
+          type: "text",
+          required: true,
+        },
+        {
+          name: "director2Name",
+          label: "Director 2 — Full Name (if applicable)",
+          type: "text",
+          required: false,
+        },
+        {
+          name: "director2Address",
+          label: "Director 2 — Residential Address",
+          type: "textarea",
+          required: false,
+        },
+        {
+          name: "director2Nationality",
+          label: "Director 2 — Nationality",
+          type: "text",
+          required: false,
+        },
+        {
+          name: "director3Name",
+          label: "Director 3 — Full Name (if applicable)",
+          type: "text",
+          required: false,
+        },
+        {
+          name: "director3Address",
+          label: "Director 3 — Residential Address",
+          type: "textarea",
+          required: false,
+        },
+        {
+          name: "director3Nationality",
+          label: "Director 3 — Nationality",
+          type: "text",
+          required: false,
         },
         {
           name: "hasShareholderChanged",
-          label: "Any changes to shareholders this year?",
+          label: "Any changes to shareholders since last filing?",
           type: "select",
           required: true,
-          options: ["Yes", "No"],
-        },
-        {
-          name: "directorDetails",
-          label: "List all current directors (name, address, nationality)",
-          type: "textarea",
-          required: true,
-          hint: "Provide full details for each director",
+          options: ["No", "Yes"],
         },
         {
           name: "auditorName",
-          label: "Auditor's Name & Firm (if applicable)",
+          label: "Auditor's Name & Firm",
           type: "text",
           required: false,
+          hint: "Leave blank if you are a small company — auditor not mandatory",
         },
       ],
     },
@@ -140,6 +232,7 @@ const INTAKE_FORMS = {
           label: "Date Board Resolution was Passed",
           type: "date",
           required: true,
+          hint: "The date directors met and approved this change",
         },
         {
           name: "reasonForChange",
@@ -150,7 +243,7 @@ const INTAKE_FORMS = {
       ],
     },
     {
-      section: "Director Information",
+      section: "Director Details",
       icon: "👤",
       fields: [
         {
@@ -207,15 +300,22 @@ const INTAKE_FORMS = {
   ],
   CHANGE_OF_ADDRESS: [
     {
-      section: "New Address Details",
+      section: "Address Change Details",
       icon: "📍",
       fields: [
+        {
+          name: "currentAddress",
+          label: "Current Registered Address",
+          type: "textarea",
+          required: true,
+          hint: "Your current address as registered with CAC",
+        },
         {
           name: "newAddress",
           label: "New Registered Address",
           type: "textarea",
           required: true,
-          hint: "Full address including street, city",
+          hint: "Full new address including street name and number",
         },
         {
           name: "newState",
@@ -269,17 +369,17 @@ const INTAKE_FORMS = {
           required: true,
         },
         {
+          name: "addressType",
+          label: "Type of New Address",
+          type: "select",
+          required: true,
+          options: ["Physical Office", "Virtual Office", "Home Address"],
+        },
+        {
           name: "effectiveDate",
           label: "Effective Date of Change",
           type: "date",
           required: true,
-        },
-        {
-          name: "isPhysicalOffice",
-          label: "Type of Address",
-          type: "select",
-          required: true,
-          options: ["Physical Office", "Virtual Office", "Home Address"],
         },
       ],
     },
@@ -292,6 +392,7 @@ const INTAKE_FORMS = {
           label: "Date Board Resolution was Passed",
           type: "date",
           required: true,
+          hint: "Board must approve change of address",
         },
         {
           name: "additionalInfo",
@@ -315,17 +416,17 @@ const INTAKE_FORMS = {
         },
         {
           name: "proposedName1",
-          label: "Proposed New Name (1st Choice)",
+          label: "Proposed New Name — 1st Choice",
           type: "text",
           required: true,
           hint: "Your preferred new company name",
         },
         {
           name: "proposedName2",
-          label: "Proposed New Name (2nd Choice)",
+          label: "Proposed New Name — 2nd Choice",
           type: "text",
           required: false,
-          hint: "Alternative in case 1st choice is unavailable",
+          hint: "Alternative name in case 1st choice is unavailable",
         },
         {
           name: "reasonForChange",
@@ -350,10 +451,11 @@ const INTAKE_FORMS = {
           label: "Date General Meeting Approved Change",
           type: "date",
           required: true,
+          hint: "Shareholders must approve name change at a general meeting",
         },
         {
           name: "additionalInfo",
-          label: "Any additional information for the agent?",
+          label: "Any additional information?",
           type: "textarea",
           required: false,
         },
@@ -368,14 +470,16 @@ const INTAKE_FORMS = {
         {
           name: "currentShareCapital",
           label: "Current Authorised Share Capital (₦)",
-          type: "number",
+          type: "number_formatted",
           required: true,
+          hint: "e.g 10,000,000",
         },
         {
           name: "newShareCapital",
           label: "New Authorised Share Capital (₦)",
-          type: "number",
+          type: "number_formatted",
           required: true,
+          hint: "Must be higher than current share capital",
         },
         {
           name: "reasonForIncrease",
@@ -397,7 +501,7 @@ const INTAKE_FORMS = {
         },
         {
           name: "additionalInfo",
-          label: "Any additional information for the agent?",
+          label: "Any additional information?",
           type: "textarea",
           required: false,
         },
@@ -418,25 +522,27 @@ const INTAKE_FORMS = {
         {
           name: "totalAssets",
           label: "Total Assets (₦)",
-          type: "number",
+          type: "number_formatted",
           required: true,
+          hint: "e.g 25,000,000",
         },
         {
           name: "totalLiabilities",
           label: "Total Liabilities (₦)",
-          type: "number",
+          type: "number_formatted",
           required: true,
         },
         {
           name: "netProfit",
           label: "Net Profit or Loss (₦)",
-          type: "number",
+          type: "number_formatted",
           required: true,
+          hint: "Use negative number for a loss e.g -500,000",
         },
         {
           name: "turnover",
           label: "Total Turnover (₦)",
-          type: "number",
+          type: "number_formatted",
           required: true,
         },
       ],
@@ -465,7 +571,7 @@ const INTAKE_FORMS = {
         },
         {
           name: "additionalInfo",
-          label: "Any additional information for the agent?",
+          label: "Any additional information?",
           type: "textarea",
           required: false,
         },
@@ -515,7 +621,31 @@ function NewFiling() {
   }, [preSelectedType]);
 
   const handleFieldChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type } = e.target;
+    if (type === "number" || e.target.dataset.formatted) {
+      const raw = unformatNumber(value);
+      setFormData({ ...formData, [name]: raw });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const handleNumberInput = (name, value) => {
+    const raw = unformatNumber(value);
+    if (raw === "" || /^\d*$/.test(raw)) {
+      setFormData({ ...formData, [name]: raw });
+    }
+  };
+
+  // Check if field should be shown based on conditions
+  const shouldShowField = (field) => {
+    if (field.showIf) {
+      return formData[field.showIf.field] === field.showIf.value;
+    }
+    if (field.showIfNot) {
+      return formData[field.showIfNot.field] !== field.showIfNot.value;
+    }
+    return true;
   };
 
   const handleSubmit = async () => {
@@ -545,7 +675,103 @@ function NewFiling() {
 
   const sections = selectedType ? INTAKE_FORMS[selectedType.type] || [] : [];
 
-  // Success Screen
+  // Render a single field
+  const renderField = (field) => {
+    if (!shouldShowField(field)) return null;
+
+    if (field.type === "number_formatted") {
+      return (
+        <div key={field.name}>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {field.label}
+            {field.required && <span className="text-red-500 ml-1">*</span>}
+          </label>
+          {field.hint && (
+            <p className="text-xs text-gray-400 mb-1">{field.hint}</p>
+          )}
+          <input
+            type="text"
+            name={field.name}
+            value={formatNumber(formData[field.name] || "")}
+            onChange={(e) => handleNumberInput(field.name, e.target.value)}
+            placeholder="0"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700 text-sm"
+          />
+        </div>
+      );
+    }
+
+    if (field.type === "textarea") {
+      return (
+        <div key={field.name}>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {field.label}
+            {field.required && <span className="text-red-500 ml-1">*</span>}
+          </label>
+          {field.hint && (
+            <p className="text-xs text-gray-400 mb-1">{field.hint}</p>
+          )}
+          <textarea
+            name={field.name}
+            value={formData[field.name] || ""}
+            onChange={handleFieldChange}
+            required={field.required}
+            rows={3}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700 resize-none text-sm"
+          />
+        </div>
+      );
+    }
+
+    if (field.type === "select") {
+      return (
+        <div key={field.name}>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {field.label}
+            {field.required && <span className="text-red-500 ml-1">*</span>}
+          </label>
+          {field.hint && (
+            <p className="text-xs text-gray-400 mb-1">{field.hint}</p>
+          )}
+          <select
+            name={field.name}
+            value={formData[field.name] || ""}
+            onChange={handleFieldChange}
+            required={field.required}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700 bg-white text-sm"
+          >
+            <option value="">Select an option</option>
+            {field.options.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    return (
+      <div key={field.name}>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {field.label}
+          {field.required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+        {field.hint && (
+          <p className="text-xs text-gray-400 mb-1">{field.hint}</p>
+        )}
+        <input
+          type={field.type}
+          name={field.name}
+          value={formData[field.name] || ""}
+          onChange={handleFieldChange}
+          required={field.required}
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700 text-sm"
+        />
+      </div>
+    );
+  };
+
   if (success) {
     return (
       <div className="min-h-screen bg-green-50 flex items-center justify-center px-6">
@@ -641,8 +867,7 @@ function NewFiling() {
               What would you like to file?
             </h2>
             <p className="text-gray-500 text-sm mb-6">
-              Select the type of CAC filing — our team prepares all documents
-              for you
+              Select the type — our team prepares all documents for you
             </p>
             <div className="space-y-3">
               {filingTypes.map((type) => (
@@ -776,13 +1001,13 @@ function NewFiling() {
               {selectedType?.label} — Information Form
             </h2>
             <p className="text-gray-500 text-sm mb-2">
-              Fill in the details below. Our legal team will use this to prepare
-              all required documents.
+              Fill in what you know. Our legal team prepares all required
+              documents.
             </p>
             <div className="mb-6 p-3 bg-blue-50 border border-blue-100 rounded-xl">
               <p className="text-xs text-blue-800">
                 💡 <strong>You don't need any documents right now.</strong> Just
-                fill in what you know — our agent will prepare everything and
+                fill in the details — our agent will prepare everything and
                 reach out if they need more information.
               </p>
             </div>
@@ -798,57 +1023,7 @@ function NewFiling() {
                     {section.section}
                   </h3>
                   <div className="space-y-4">
-                    {section.fields.map((field) => (
-                      <div key={field.name}>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          {field.label}
-                          {field.required && (
-                            <span className="text-red-500 ml-1">*</span>
-                          )}
-                        </label>
-                        {field.hint && (
-                          <p className="text-xs text-gray-400 mb-1">
-                            {field.hint}
-                          </p>
-                        )}
-                        {field.type === "textarea" ? (
-                          <textarea
-                            name={field.name}
-                            value={formData[field.name] || ""}
-                            onChange={handleFieldChange}
-                            required={field.required}
-                            rows={3}
-                            placeholder={field.hint || ""}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700 resize-none text-sm"
-                          />
-                        ) : field.type === "select" ? (
-                          <select
-                            name={field.name}
-                            value={formData[field.name] || ""}
-                            onChange={handleFieldChange}
-                            required={field.required}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700 bg-white text-sm"
-                          >
-                            <option value="">Select an option</option>
-                            {field.options.map((opt) => (
-                              <option key={opt} value={opt}>
-                                {opt}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            type={field.type}
-                            name={field.name}
-                            value={formData[field.name] || ""}
-                            onChange={handleFieldChange}
-                            required={field.required}
-                            placeholder={field.hint || ""}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700 text-sm"
-                          />
-                        )}
-                      </div>
-                    ))}
+                    {section.fields.map((field) => renderField(field))}
                   </div>
                 </div>
               ))}
@@ -894,9 +1069,10 @@ function NewFiling() {
               </button>
               <button
                 onClick={() => {
-                  // Validate required fields
                   const allFields = sections.flatMap((s) => s.fields);
-                  const requiredFields = allFields.filter((f) => f.required);
+                  const requiredFields = allFields.filter(
+                    (f) => f.required && shouldShowField(f),
+                  );
                   const missing = requiredFields.find((f) => !formData[f.name]);
                   if (missing)
                     return setError(`Please fill in: ${missing.label}`);
