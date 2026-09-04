@@ -597,7 +597,7 @@ function NewFiling() {
           onClick={() => navigate("/dashboard")}
           className="text-green-800 hover:text-green-600 transition flex items-center gap-1 text-sm font-medium"
         >
-          ← Back to Dashboard
+          ← Back
         </button>
         <div className="flex items-center gap-2">
           <span className="text-xl font-bold text-green-800">CAC</span>
