@@ -281,49 +281,54 @@ function AdminFilingDetail() {
                         </p>
                         <p className="text-sm">{msg.message}</p>
 
-                        {/* Show uploaded documents */}
-                        {msg.attachments && (
-                          <div className="mt-2 space-y-1">
-                            <p className="text-xs font-medium text-green-400">
-                              📎 Uploaded files:
-                            </p>
-                            {Array.isArray(msg.attachments) &&
-                            msg.attachments.length > 0 ? (
-                              msg.attachments.map((file, i) => (
-                                <a
-                                  key={i}
-                                  href={
-                                    file.url || file.path || file.secure_url
-                                  }
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="block text-xs text-blue-300 underline hover:text-blue-200"
-                                >
-                                  📄{" "}
-                                  {file.name ||
-                                    file.originalname ||
-                                    `File ${i + 1}`}
-                                </a>
-                              ))
-                            ) : (
-                              <pre className="text-xs text-gray-400">
-                                {JSON.stringify(msg.attachments, null, 2)}
-                              </pre>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Show requested docs */}
+                        {/* Show requested docs list */}
                         {msg.requestedDocs &&
-                          Array.isArray(msg.requestedDocs) && (
+                          Array.isArray(msg.requestedDocs) &&
+                          msg.requestedDocs.length > 0 && (
                             <div className="mt-2">
-                              <p className="text-xs font-medium text-orange-300">
-                                📎 Requested:
+                              <p className="text-xs font-medium text-orange-300 mb-1">
+                                📋 Documents requested:
                               </p>
                               {msg.requestedDocs.map((doc, i) => (
                                 <p key={i} className="text-xs text-gray-300">
                                   • {doc}
                                 </p>
+                              ))}
+                            </div>
+                          )}
+
+                        {/* Show uploaded attachments */}
+                        {msg.attachments &&
+                          Array.isArray(msg.attachments) &&
+                          msg.attachments.length > 0 && (
+                            <div className="mt-3 p-2 bg-green-900 rounded-xl">
+                              <p className="text-xs font-bold text-green-300 mb-2">
+                                ✅ Client uploaded {msg.attachments.length}{" "}
+                                document(s):
+                              </p>
+                              {msg.attachments.map((file, i) => (
+                                <a
+                                  key={i}
+                                  href={`${file.url || file.path || file.secure_url}?fl_attachment=true`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  download={
+                                    file.name ||
+                                    file.originalname ||
+                                    `Document ${i + 1}`
+                                  }
+                                  className="flex items-center gap-2 text-xs text-blue-300 underline hover:text-blue-200 py-1 border border-blue-800 rounded-lg px-2 mt-1"
+                                >
+                                  <span>📥</span>
+                                  <span>
+                                    {file.name ||
+                                      file.originalname ||
+                                      `Document ${i + 1}`}
+                                  </span>
+                                  <span className="ml-auto text-gray-400">
+                                    Download
+                                  </span>
+                                </a>
                               ))}
                             </div>
                           )}
