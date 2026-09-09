@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../utils/api";
@@ -7,7 +7,6 @@ function Dashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [stats, setStats] = useState({
-    totalBusinesses: 0,
     totalFilings: 0,
     pendingFilings: 0,
     completedFilings: 0,
@@ -17,95 +16,103 @@ function Dashboard() {
   const [filings, setFilings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Refs for scroll targets
   const quickActionsRef = useRef(null);
   const recentFilingsRef = useRef(null);
   const myBusinessesRef = useRef(null);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const [statsRes, filingsRes] = await Promise.all([
-          api.get("/api/business/stats"),
-          api.get("/api/filings"),
-        ]);
-        setStats(statsRes.data.stats);
-        setBusinesses(statsRes.data.businesses);
-        setFilings(filingsRes.data.filings);
-      } catch (error) {
-        console.error("Error fetching stats:", error.response?.data);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
+  const fetchStats = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const [statsRes, filingsRes] = await Promise.all([
+        api.get("/api/business/stats"),
+        api.get("/api/filings"),
+      ]);
+      setStats(statsRes.data.stats);
+      setBusinesses(statsRes.data.businesses);
+      setFilings(filingsRes.data.filings);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  const scrollTo = (ref) =>
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  // Scroll helper
-  const scrollTo = (ref) => {
-    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const formatBusinessType = (type) => {
-    const types = {
+  const formatBusinessType = (type) =>
+    ({
       BUSINESS_NAME: "Business Name",
       PRIVATE_LIMITED_COMPANY: "Private Limited Company",
       PUBLIC_LIMITED_COMPANY: "Public Limited Company",
       INCORPORATED_TRUSTEE: "Incorporated Trustee",
       LIMITED_LIABILITY_PARTNERSHIP: "Limited Liability Partnership",
-    };
-    return types[type] || type;
-  };
+    })[type] || type;
 
-  const formatFilingType = (type) => {
-    const types = {
+  const formatFilingType = (type) =>
+    ({
       ANNUAL_RETURNS: "Annual Returns",
       CHANGE_OF_DIRECTORS: "Change of Directors",
       CHANGE_OF_ADDRESS: "Change of Address",
       CHANGE_OF_NAME: "Change of Name",
       INCREASE_SHARE_CAPITAL: "Increase Share Capital",
       AUDITED_ACCOUNTS: "Audited Accounts",
-    };
-    return types[type] || type;
-  };
+    })[type] || type;
 
-  const getStatusColor = (status) => {
-    const colors = {
-      PENDING: "bg-yellow-100 text-yellow-700",
-      IN_REVIEW: "bg-blue-100 text-blue-700",
-      PROCESSING: "bg-purple-100 text-purple-700",
-      SUBMITTED_TO_CAC: "bg-indigo-100 text-indigo-700",
-      COMPLETED: "bg-green-100 text-green-700",
-      REJECTED: "bg-red-100 text-red-700",
-    };
-    return colors[status] || "bg-gray-100 text-gray-700";
-  };
+  const getStatusStyle = (status) =>
+    ({
+      PENDING: { bg: "#fefce8", color: "#854d0e" },
+      IN_REVIEW: { bg: "#eff6ff", color: "#1e40af" },
+      AWAITING_INFO: { bg: "#fff7ed", color: "#9a3412" },
+      PROCESSING: { bg: "#faf5ff", color: "#6b21a8" },
+      SUBMITTED_TO_CAC: { bg: "#eef2ff", color: "#3730a3" },
+      COMPLETED: { bg: "#f0fdf4", color: "#15803d" },
+      REJECTED: { bg: "#fef2f2", color: "#dc2626" },
+    })[status] || { bg: "#f8fafc", color: "#475569" };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-NG", {
+  const formatCurrency = (amount) =>
+    new Intl.NumberFormat("en-NG", {
       style: "currency",
       currency: "NGN",
       minimumFractionDigits: 0,
-    }).format(amount);
-  };
+    }).format(amount || 0);
+
+  const initials =
+    user?.fullName
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "U";
 
   if (!user) return null;
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <p className="text-green-800 font-medium">
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "#f4f6f4",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: "32px", marginBottom: "12px" }}>⏳</div>
+          <p style={{ color: "#0f5c2e", fontWeight: "600", fontSize: "14px" }}>
             Loading your dashboard...
           </p>
         </div>
@@ -114,448 +121,932 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-green-50">
-      {/* Navbar */}
-      <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <span className="text-xl font-bold text-green-800">CAC</span>
-          <span className="text-xl font-semibold text-green-600">Filing</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600 hidden md:block">
-            👋 Welcome, {user.fullName}
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#f4f6f4",
+        fontFamily: "-apple-system, 'Inter', sans-serif",
+      }}
+    >
+      {/* Dark Navbar */}
+      <nav
+        style={{
+          background: "#0a1628",
+          padding: "12px 24px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div
+            style={{
+              width: "28px",
+              height: "28px",
+              background: "#0f5c2e",
+              borderRadius: "7px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span
+              style={{ color: "#fff", fontSize: "11px", fontWeight: "800" }}
+            >
+              CF
+            </span>
+          </div>
+          <span
+            style={{
+              fontSize: "15px",
+              fontWeight: "800",
+              color: "#fff",
+              letterSpacing: "-0.3px",
+            }}
+          >
+            CAC<span style={{ color: "#4ade80" }}>Filing</span>
           </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div
+              style={{
+                width: "30px",
+                height: "30px",
+                borderRadius: "50%",
+                background: "#0f5c2e",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "11px",
+                fontWeight: "800",
+                color: "#fff",
+              }}
+            >
+              {initials}
+            </div>
+            <span
+              style={{ fontSize: "12px", color: "#94a3b8", display: "none" }}
+              className="md-show"
+            >
+              {user.fullName}
+            </span>
+          </div>
           <button
             onClick={handleLogout}
-            className="px-4 py-2 text-red-600 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-50 transition"
+            style={{
+              padding: "6px 14px",
+              border: "1px solid #1e293b",
+              borderRadius: "7px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: "#94a3b8",
+              background: "transparent",
+              cursor: "pointer",
+            }}
           >
             Logout
           </button>
         </div>
       </nav>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div
+        style={{ maxWidth: "960px", margin: "0 auto", padding: "20px 20px" }}
+      >
         {/* Welcome Banner */}
-        <div className="bg-green-800 text-white rounded-2xl p-6 md:p-8 mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold">
-            Welcome back, {user.fullName.split(" ")[0]}! 👋
-          </h1>
-          <p className="mt-2 text-green-200">
-            Here's an overview of your business compliance status.
-          </p>
-          <div className="flex gap-3 mt-4">
+        <div
+          style={{
+            background: "linear-gradient(135deg, #0f5c2e 0%, #1a7a3f 100%)",
+            borderRadius: "14px",
+            padding: "22px 28px",
+            marginBottom: "16px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "12px",
+          }}
+        >
+          <div>
+            <h1
+              style={{
+                fontSize: "20px",
+                fontWeight: "800",
+                color: "#fff",
+                letterSpacing: "-0.5px",
+                marginBottom: "4px",
+              }}
+            >
+              Good day, {user.fullName.split(" ")[0]} 👋
+            </h1>
+            <p style={{ fontSize: "13px", color: "#86efac" }}>
+              {businesses.length === 0
+                ? "Add your first business to get started"
+                : `Managing ${businesses.length} business${businesses.length > 1 ? "es" : ""} · Stay compliant`}
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "8px" }}>
             <button
               onClick={() => navigate("/new-filing")}
-              className="px-6 py-2 bg-white text-green-800 font-semibold rounded-xl hover:bg-green-50 transition text-sm"
+              style={{
+                padding: "9px 18px",
+                background: "#fff",
+                color: "#0f5c2e",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "13px",
+                fontWeight: "700",
+                cursor: "pointer",
+              }}
             >
-              + Start New Filing
+              + New Filing
             </button>
             <button
               onClick={() => navigate("/business/setup")}
-              className="px-6 py-2 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-600 transition text-sm border border-green-600"
+              style={{
+                padding: "9px 18px",
+                background: "rgba(255,255,255,0.12)",
+                color: "#fff",
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: "8px",
+                fontSize: "13px",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
             >
               + Add Business
             </button>
           </div>
         </div>
 
-        {/* Stats Cards — clickable with scroll */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {/* Stats */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: "10px",
+            marginBottom: "16px",
+          }}
+        >
           {[
             {
               label: "Total Filings",
               value: stats.totalFilings,
               icon: "📋",
-              color: "bg-blue-50 text-blue-700",
+              bg: "#eff6ff",
               ref: recentFilingsRef,
             },
             {
               label: "Pending",
               value: stats.pendingFilings,
               icon: "⏳",
-              color: "bg-yellow-50 text-yellow-700",
+              bg: "#fefce8",
               ref: recentFilingsRef,
             },
             {
               label: "Completed",
               value: stats.completedFilings,
               icon: "✅",
-              color: "bg-green-50 text-green-700",
+              bg: "#f0fdf4",
               ref: recentFilingsRef,
             },
             {
               label: "Due Soon",
               value: stats.dueSoonFilings,
               icon: "🔔",
-              color: "bg-red-50 text-red-700",
+              bg: "#fef2f2",
               ref: myBusinessesRef,
             },
-          ].map((stat, i) => (
+          ].map((s, i) => (
             <button
               key={i}
-              onClick={() => scrollTo(stat.ref)}
-              className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-left hover:shadow-md transition active:scale-95 cursor-pointer"
+              onClick={() => scrollTo(s.ref)}
+              style={{
+                background: "#fff",
+                border: "1px solid #e8ede8",
+                borderRadius: "10px",
+                padding: "14px 16px",
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "border-color 0.15s",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.borderColor = "#0f5c2e")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.borderColor = "#e8ede8")
+              }
             >
               <div
-                className={`inline-block px-2 py-1 rounded-lg text-lg ${stat.color}`}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "8px",
+                }}
               >
-                {stat.icon}
+                <div
+                  style={{
+                    width: "30px",
+                    height: "30px",
+                    background: s.bg,
+                    borderRadius: "7px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "15px",
+                  }}
+                >
+                  {s.icon}
+                </div>
+                <span style={{ fontSize: "10px", color: "#94a3b8" }}>↓</span>
               </div>
-              <p className="mt-2 text-2xl font-bold text-gray-800">
-                {stat.value}
-              </p>
-              <p className="text-sm text-gray-500">{stat.label}</p>
-              <p className="text-xs text-green-600 mt-1">Tap to view →</p>
+              <div
+                style={{
+                  fontSize: "24px",
+                  fontWeight: "900",
+                  color: "#0a1628",
+                  letterSpacing: "-1px",
+                  marginBottom: "2px",
+                }}
+              >
+                {s.value}
+              </div>
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: "#64748b",
+                  fontWeight: "500",
+                }}
+              >
+                {s.label}
+              </div>
+              <div
+                style={{
+                  fontSize: "10px",
+                  color: "#0f5c2e",
+                  fontWeight: "600",
+                  marginTop: "4px",
+                }}
+              >
+                Tap to view →
+              </div>
             </button>
           ))}
         </div>
 
-        {/* Main Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Left Column */}
-          <div className="md:col-span-2 space-y-6">
-            {/* 1. Quick Actions — first on mobile */}
+        {/* Content */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* Quick Actions */}
+          <div
+            ref={quickActionsRef}
+            style={{
+              background: "#fff",
+              borderRadius: "12px",
+              border: "1px solid #e8ede8",
+              overflow: "hidden",
+            }}
+          >
             <div
-              ref={quickActionsRef}
-              className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
+              style={{
+                padding: "14px 18px",
+                borderBottom: "1px solid #f1f5f1",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
             >
-              <h2 className="text-base font-bold text-gray-800 mb-4">
+              <span
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "700",
+                  color: "#0a1628",
+                }}
+              >
                 ⚡ Quick Actions
-              </h2>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  {
-                    icon: "📝",
-                    label: "Annual Returns",
-                    desc: "File yearly returns",
-                    type: "ANNUAL_RETURNS",
-                  },
-                  {
-                    icon: "👥",
-                    label: "Change Directors",
-                    desc: "Update director info",
-                    type: "CHANGE_OF_DIRECTORS",
-                  },
-                  {
-                    icon: "📍",
-                    label: "Change Address",
-                    desc: "Update address",
-                    type: "CHANGE_OF_ADDRESS",
-                  },
-                  {
-                    icon: "✏️",
-                    label: "Change Name",
-                    desc: "Update business name",
-                    type: "CHANGE_OF_NAME",
-                  },
-                ].map((action, i) => (
-                  <button
-                    key={i}
-                    onClick={() => navigate(`/new-filing?type=${action.type}`)}
-                    className="flex flex-col items-start gap-1 p-3 rounded-xl hover:bg-green-50 transition text-left border border-gray-100 cursor-pointer active:scale-95"
-                  >
-                    <span className="text-2xl">{action.icon}</span>
-                    <p className="text-sm font-medium text-gray-800">
-                      {action.label}
-                    </p>
-                    <p className="text-xs text-gray-400">{action.desc}</p>
-                  </button>
-                ))}
-              </div>
+              </span>
             </div>
-
-            {/* 2. Recent Filings */}
             <div
-              ref={recentFilingsRef}
-              className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: "0",
+                borderBottom: "1px solid #f1f5f1",
+              }}
             >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-base font-bold text-gray-800">
-                  📋 Recent Filings
-                </h2>
+              {[
+                {
+                  icon: "📝",
+                  label: "Annual Returns",
+                  desc: "File yearly returns",
+                  type: "ANNUAL_RETURNS",
+                },
+                {
+                  icon: "👥",
+                  label: "Change Directors",
+                  desc: "Update director info",
+                  type: "CHANGE_OF_DIRECTORS",
+                },
+                {
+                  icon: "📍",
+                  label: "Change Address",
+                  desc: "Update address",
+                  type: "CHANGE_OF_ADDRESS",
+                },
+                {
+                  icon: "✏️",
+                  label: "Change Name",
+                  desc: "Update business name",
+                  type: "CHANGE_OF_NAME",
+                },
+              ].map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => navigate(`/new-filing?type=${a.type}`)}
+                  style={{
+                    padding: "16px",
+                    borderRight: i < 3 ? "1px solid #f1f5f1" : "none",
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "background 0.15s",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = "#f8faf8")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = "transparent")
+                  }
+                >
+                  <div style={{ fontSize: "22px", marginBottom: "8px" }}>
+                    {a.icon}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      color: "#0a1628",
+                      marginBottom: "2px",
+                    }}
+                  >
+                    {a.label}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8" }}>
+                    {a.desc}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Filings */}
+          <div
+            ref={recentFilingsRef}
+            style={{
+              background: "#fff",
+              borderRadius: "12px",
+              border: "1px solid #e8ede8",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "14px 18px",
+                borderBottom: "1px solid #f1f5f1",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "700",
+                  color: "#0a1628",
+                }}
+              >
+                📋 Recent Filings
+              </span>
+              <button
+                onClick={() => navigate("/new-filing")}
+                style={{
+                  fontSize: "12px",
+                  color: "#0f5c2e",
+                  fontWeight: "600",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                + New Filing
+              </button>
+            </div>
+            {filings.length === 0 ? (
+              <div style={{ padding: "40px", textAlign: "center" }}>
+                <div style={{ fontSize: "32px", marginBottom: "10px" }}>📭</div>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    color: "#0a1628",
+                    marginBottom: "4px",
+                  }}
+                >
+                  No filings yet
+                </p>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "#94a3b8",
+                    marginBottom: "16px",
+                  }}
+                >
+                  Start your first CAC filing to see it here
+                </p>
                 <button
                   onClick={() => navigate("/new-filing")}
-                  className="text-sm text-green-700 hover:underline"
+                  style={{
+                    padding: "9px 20px",
+                    background: "#0f5c2e",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                  }}
                 >
-                  + New Filing
+                  Start Filing
                 </button>
               </div>
-              {filings.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-3">📭</div>
-                  <p className="text-gray-500 font-medium text-sm">
-                    No filings yet
-                  </p>
-                  <p className="text-gray-400 text-xs mt-1">
-                    Start your first CAC filing to see it here
-                  </p>
-                  <button
-                    onClick={() => navigate("/new-filing")}
-                    className="mt-3 px-5 py-2 bg-green-800 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition"
-                  >
-                    Start Filing
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {filings.slice(0, 5).map((filing) => (
+            ) : (
+              <div>
+                {filings.slice(0, 5).map((filing, i) => {
+                  const s = getStatusStyle(filing.status);
+                  return (
                     <div
                       key={filing.id}
-                      className="p-3 border border-gray-100 rounded-xl hover:bg-green-50 transition"
+                      onClick={() => navigate(`/filing/${filing.id}`)}
+                      style={{
+                        padding: "12px 18px",
+                        borderBottom:
+                          i < filings.slice(0, 5).length - 1
+                            ? "1px solid #f8faf8"
+                            : "none",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        cursor: "pointer",
+                        transition: "background 0.1s",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = "#f8faf8")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = "transparent")
+                      }
                     >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold text-gray-800 text-sm">
-                            {formatFilingType(filing.filingType)}
+                      <div>
+                        <p
+                          style={{
+                            fontSize: "13px",
+                            fontWeight: "600",
+                            color: "#0a1628",
+                            marginBottom: "2px",
+                          }}
+                        >
+                          {formatFilingType(filing.filingType)}
+                        </p>
+                        <p style={{ fontSize: "11px", color: "#64748b" }}>
+                          {filing.business?.businessName} ·{" "}
+                          {new Date(filing.createdAt).toLocaleDateString(
+                            "en-NG",
+                            { day: "numeric", month: "short", year: "numeric" },
+                          )}
+                        </p>
+                        {filing.status === "AWAITING_INFO" && (
+                          <p
+                            style={{
+                              fontSize: "11px",
+                              color: "#ea580c",
+                              fontWeight: "600",
+                              marginTop: "2px",
+                            }}
+                          >
+                            ⚠️ Action required
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {filing.business?.businessName}
+                        )}
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "flex-end",
+                          gap: "4px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            padding: "3px 10px",
+                            borderRadius: "100px",
+                            background: s.bg,
+                            color: s.color,
+                            fontSize: "11px",
+                            fontWeight: "700",
+                          }}
+                        >
+                          {filing.status.replace(/_/g, " ")}
+                        </span>
+                        {filing.amount && (
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              color: "#0f5c2e",
+                              fontWeight: "600",
+                            }}
+                          >
+                            {formatCurrency(filing.amount)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* My Businesses */}
+          <div
+            ref={myBusinessesRef}
+            style={{
+              background: "#fff",
+              borderRadius: "12px",
+              border: "1px solid #e8ede8",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "14px 18px",
+                borderBottom: "1px solid #f1f5f1",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "700",
+                  color: "#0a1628",
+                }}
+              >
+                🏢 My Businesses
+              </span>
+              <button
+                onClick={() => navigate("/business/setup")}
+                style={{
+                  fontSize: "12px",
+                  color: "#0f5c2e",
+                  fontWeight: "600",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                + Add New
+              </button>
+            </div>
+            {businesses.length === 0 ? (
+              <div style={{ padding: "40px", textAlign: "center" }}>
+                <div style={{ fontSize: "32px", marginBottom: "10px" }}>🏢</div>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    color: "#0a1628",
+                    marginBottom: "4px",
+                  }}
+                >
+                  No businesses yet
+                </p>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "#94a3b8",
+                    marginBottom: "16px",
+                  }}
+                >
+                  Add your first business to start filing
+                </p>
+                <button
+                  onClick={() => navigate("/business/setup")}
+                  style={{
+                    padding: "9px 20px",
+                    background: "#0f5c2e",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                  }}
+                >
+                  Add Business
+                </button>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                  gap: "1px",
+                  background: "#f1f5f1",
+                }}
+              >
+                {businesses.map((business) => (
+                  <div
+                    key={business.id}
+                    style={{ background: "#fff", padding: "16px 18px" }}
+                  >
+                    {/* Compliance Alert */}
+                    {business.complianceInfo &&
+                      business.complianceInfo.complianceStatus !== "good" && (
+                        <div
+                          style={{
+                            padding: "8px 12px",
+                            borderRadius: "8px",
+                            marginBottom: "12px",
+                            background:
+                              business.complianceInfo.complianceColor === "red"
+                                ? "#fef2f2"
+                                : "#fffbeb",
+                            border: `1px solid ${business.complianceInfo.complianceColor === "red" ? "#fecaca" : "#fde68a"}`,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <p
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: "600",
+                              color:
+                                business.complianceInfo.complianceColor ===
+                                "red"
+                                  ? "#dc2626"
+                                  : "#92400e",
+                            }}
+                          >
+                            {business.complianceInfo.complianceColor === "red"
+                              ? "🔴"
+                              : "🟡"}{" "}
+                            {business.complianceInfo.complianceMessage}
                           </p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {new Date(filing.createdAt).toLocaleDateString(
-                              "en-NG",
-                              {
+                          <button
+                            onClick={() =>
+                              navigate("/new-filing?type=ANNUAL_RETURNS")
+                            }
+                            style={{
+                              padding: "4px 10px",
+                              background:
+                                business.complianceInfo.complianceColor ===
+                                "red"
+                                  ? "#dc2626"
+                                  : "#d97706",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: "6px",
+                              fontSize: "10px",
+                              fontWeight: "700",
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            File Now
+                          </button>
+                        </div>
+                      )}
+
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      <div>
+                        <p
+                          style={{
+                            fontSize: "14px",
+                            fontWeight: "800",
+                            color: "#0a1628",
+                            marginBottom: "2px",
+                            letterSpacing: "-0.3px",
+                          }}
+                        >
+                          {business.businessName}
+                        </p>
+                        <p style={{ fontSize: "11px", color: "#64748b" }}>
+                          {formatBusinessType(business.businessType)}
+                        </p>
+                        {business.rcNumber && (
+                          <p
+                            style={{
+                              fontSize: "11px",
+                              color: "#0f5c2e",
+                              fontWeight: "700",
+                              marginTop: "2px",
+                            }}
+                          >
+                            RC: {business.rcNumber}
+                          </p>
+                        )}
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "flex-end",
+                          gap: "4px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            padding: "3px 10px",
+                            borderRadius: "100px",
+                            background: "#e8f5ee",
+                            color: "#0f5c2e",
+                            fontSize: "10px",
+                            fontWeight: "700",
+                          }}
+                        >
+                          {business.status}
+                        </span>
+                        <span style={{ fontSize: "10px", color: "#94a3b8" }}>
+                          {business.filings.length} filing(s)
+                        </span>
+                      </div>
+                    </div>
+
+                    {business.complianceInfo && business.registrationDate && (
+                      <div
+                        style={{
+                          borderTop: "1px solid #f1f5f1",
+                          paddingTop: "10px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            gap: "8px",
+                            marginBottom: "8px",
+                          }}
+                        >
+                          <div>
+                            <p
+                              style={{
+                                fontSize: "10px",
+                                color: "#94a3b8",
+                                marginBottom: "2px",
+                              }}
+                            >
+                              Registered
+                            </p>
+                            <p
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: "600",
+                                color: "#0a1628",
+                              }}
+                            >
+                              {new Date(
+                                business.registrationDate,
+                              ).toLocaleDateString("en-NG", {
                                 day: "numeric",
                                 month: "short",
                                 year: "numeric",
-                              },
-                            )}
-                          </p>
+                              })}
+                            </p>
+                          </div>
+                          <div>
+                            <p
+                              style={{
+                                fontSize: "10px",
+                                color: "#94a3b8",
+                                marginBottom: "2px",
+                              }}
+                            >
+                              Next Filing Due
+                            </p>
+                            <p
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: "600",
+                                color:
+                                  business.complianceInfo.complianceColor ===
+                                  "red"
+                                    ? "#dc2626"
+                                    : business.complianceInfo
+                                          .complianceColor === "amber"
+                                      ? "#d97706"
+                                      : "#0f5c2e",
+                              }}
+                            >
+                              {new Date(
+                                business.complianceInfo.nextDueDate,
+                              ).toLocaleDateString("en-NG", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <span
-                            className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(filing.status)}`}
-                          >
-                            {filing.status.replace(/_/g, " ")}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: "4px",
+                          }}
+                        >
+                          <span style={{ fontSize: "10px", color: "#64748b" }}>
+                            Compliance
                           </span>
-                          {filing.amount && (
-                            <span className="text-xs text-green-700 font-medium">
-                              {formatCurrency(filing.amount)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 3. My Businesses */}
-            <div
-              ref={myBusinessesRef}
-              className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-base font-bold text-gray-800">
-                  🏢 My Businesses
-                </h2>
-                <button
-                  onClick={() => navigate("/business/setup")}
-                  className="text-sm text-green-700 hover:underline"
-                >
-                  + Add New
-                </button>
-              </div>
-
-              {loading ? (
-                <div className="text-center py-8 text-gray-400 text-sm">
-                  Loading...
-                </div>
-              ) : businesses.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-3">🏢</div>
-                  <p className="text-gray-500 font-medium text-sm">
-                    No businesses yet
-                  </p>
-                  <button
-                    onClick={() => navigate("/business/setup")}
-                    className="mt-3 px-5 py-2 bg-green-800 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition"
-                  >
-                    Add Business
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {businesses.map((business) => (
-                    <div
-                      key={business.id}
-                      className="border border-gray-100 rounded-xl overflow-hidden"
-                    >
-                      {/* Compliance Alert Banner */}
-                      {business.complianceInfo &&
-                        business.complianceInfo.complianceStatus !== "good" && (
-                          <div
-                            className={`px-3 py-2 flex items-center gap-2 text-xs font-medium ${
-                              business.complianceInfo.complianceColor === "red"
-                                ? "bg-red-50 text-red-700 border-b border-red-100"
-                                : "bg-amber-50 text-amber-700 border-b border-amber-100"
-                            }`}
-                          >
-                            <span>
-                              {business.complianceInfo.complianceColor === "red"
-                                ? "🔴"
-                                : "🟡"}
-                            </span>
-                            {business.complianceInfo.complianceMessage}
-                            <button
-                              onClick={() =>
-                                navigate(`/new-filing?type=ANNUAL_RETURNS`)
-                              }
-                              className={`ml-auto text-xs px-2 py-1 rounded-lg font-medium ${
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: "700",
+                              color:
                                 business.complianceInfo.complianceColor ===
                                 "red"
-                                  ? "bg-red-700 text-white"
-                                  : "bg-amber-600 text-white"
-                              } transition`}
-                            >
-                              File Now →
-                            </button>
-                          </div>
-                        )}
-
-                      <div className="p-3 hover:bg-green-50 transition cursor-pointer">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-bold text-gray-800 text-sm">
-                                {business.businessName}
-                              </p>
-                              <span
-                                className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                                  business.status === "active"
-                                    ? "bg-green-100 text-green-700"
-                                    : "bg-red-100 text-red-700"
-                                }`}
-                              >
-                                {business.status}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {formatBusinessType(business.businessType)}
-                            </p>
-                            {business.rcNumber && (
-                              <p className="text-xs text-green-700 mt-1 font-medium">
-                                RC: {business.rcNumber}
-                              </p>
-                            )}
-                          </div>
-                          <span className="text-xs text-gray-400">
-                            {business.filings.length} filing(s)
+                                  ? "#dc2626"
+                                  : business.complianceInfo.complianceColor ===
+                                      "amber"
+                                    ? "#d97706"
+                                    : "#0f5c2e",
+                            }}
+                          >
+                            {business.complianceInfo.complianceStatus ===
+                              "good" && "✅ Good Standing"}
+                            {business.complianceInfo.complianceStatus ===
+                              "warning" && "⚠️ Due Soon"}
+                            {business.complianceInfo.complianceStatus ===
+                              "critical" && "🔴 Critical"}
+                            {business.complianceInfo.complianceStatus ===
+                              "overdue" && "🔴 Overdue"}
                           </span>
                         </div>
-
-                        {/* Compliance Timeline */}
-                        {business.complianceInfo &&
-                          business.registrationDate && (
-                            <div className="mt-3 pt-3 border-t border-gray-100">
-                              <div className="grid grid-cols-2 gap-2 mb-2">
-                                <div>
-                                  <p className="text-xs text-gray-400">
-                                    Date Registered
-                                  </p>
-                                  <p className="text-xs font-medium text-gray-700">
-                                    {new Date(
-                                      business.registrationDate,
-                                    ).toLocaleDateString("en-NG", {
-                                      day: "numeric",
-                                      month: "short",
-                                      year: "numeric",
-                                    })}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-gray-400">
-                                    Next Filing Due
-                                  </p>
-                                  <p
-                                    className={`text-xs font-medium ${
-                                      business.complianceInfo
-                                        .complianceColor === "red"
-                                        ? "text-red-600"
-                                        : business.complianceInfo
-                                              .complianceColor === "amber"
-                                          ? "text-amber-600"
-                                          : "text-green-600"
-                                    }`}
-                                  >
-                                    {new Date(
-                                      business.complianceInfo.nextDueDate,
-                                    ).toLocaleDateString("en-NG", {
-                                      day: "numeric",
-                                      month: "short",
-                                      year: "numeric",
-                                    })}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex justify-between text-xs text-gray-400 mb-1">
-                                <span>Compliance</span>
-                                <span
-                                  className={`font-medium ${
-                                    business.complianceInfo.complianceColor ===
-                                    "red"
-                                      ? "text-red-600"
-                                      : business.complianceInfo
-                                            .complianceColor === "amber"
-                                        ? "text-amber-600"
-                                        : "text-green-600"
-                                  }`}
-                                >
-                                  {business.complianceInfo.complianceStatus ===
-                                    "good" && "✅ Good Standing"}
-                                  {business.complianceInfo.complianceStatus ===
-                                    "warning" && "⚠️ Due Soon"}
-                                  {business.complianceInfo.complianceStatus ===
-                                    "critical" && "🔴 Critical"}
-                                  {business.complianceInfo.complianceStatus ===
-                                    "overdue" && "🔴 Overdue"}
-                                </span>
-                              </div>
-                              <div className="w-full bg-gray-100 rounded-full h-1.5">
-                                <div
-                                  className={`h-1.5 rounded-full transition-all ${
-                                    business.complianceInfo.complianceColor ===
-                                    "red"
-                                      ? "bg-red-500"
-                                      : business.complianceInfo
-                                            .complianceColor === "amber"
-                                        ? "bg-amber-400"
-                                        : "bg-green-500"
-                                  }`}
-                                  style={{
-                                    width: `${Math.min(
-                                      100,
-                                      Math.max(
-                                        5,
-                                        business.complianceInfo.daysUntilDue >
-                                          365
-                                          ? 100
-                                          : (business.complianceInfo
-                                              .daysUntilDue /
-                                              365) *
-                                              100,
-                                      ),
-                                    )}%`,
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                        {!business.registrationDate && (
-                          <div className="mt-2 pt-2 border-t border-gray-100">
-                            <p className="text-xs text-amber-600">
-                              ⚠️ Add registration date to track compliance
-                            </p>
-                          </div>
-                        )}
+                        <div
+                          style={{
+                            height: "4px",
+                            borderRadius: "100px",
+                            background: "#f1f5f1",
+                          }}
+                        >
+                          <div
+                            style={{
+                              height: "100%",
+                              borderRadius: "100px",
+                              background:
+                                business.complianceInfo.complianceColor ===
+                                "red"
+                                  ? "#dc2626"
+                                  : business.complianceInfo.complianceColor ===
+                                      "amber"
+                                    ? "#d97706"
+                                    : "#0f5c2e",
+                              width: `${Math.min(100, Math.max(5, business.complianceInfo.daysUntilDue > 365 ? 100 : (business.complianceInfo.daysUntilDue / 365) * 100))}%`,
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    )}
+
+                    {!business.registrationDate && (
+                      <div
+                        style={{
+                          borderTop: "1px solid #f1f5f1",
+                          paddingTop: "8px",
+                        }}
+                      >
+                        <p style={{ fontSize: "11px", color: "#d97706" }}>
+                          ⚠️ Add registration date to track compliance
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
