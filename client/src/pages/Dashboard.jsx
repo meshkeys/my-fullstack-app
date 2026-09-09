@@ -46,7 +46,6 @@ function Dashboard() {
 
   const scrollTo = (ref) =>
     ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -111,8 +110,8 @@ function Dashboard() {
         }}
       >
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: "32px", marginBottom: "12px" }}>⏳</div>
-          <p style={{ color: "#0f5c2e", fontWeight: "600", fontSize: "14px" }}>
+          <div style={{ fontSize: "40px", marginBottom: "16px" }}>⏳</div>
+          <p style={{ color: "#0f5c2e", fontWeight: "600", fontSize: "16px" }}>
             Loading your dashboard...
           </p>
         </div>
@@ -132,7 +131,7 @@ function Dashboard() {
       <nav
         style={{
           background: "#0a1628",
-          padding: "12px 24px",
+          padding: "14px 24px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -144,24 +143,24 @@ function Dashboard() {
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div
             style={{
-              width: "28px",
-              height: "28px",
+              width: "32px",
+              height: "32px",
               background: "#0f5c2e",
-              borderRadius: "7px",
+              borderRadius: "8px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
             <span
-              style={{ color: "#fff", fontSize: "11px", fontWeight: "800" }}
+              style={{ color: "#fff", fontSize: "13px", fontWeight: "800" }}
             >
               CF
             </span>
           </div>
           <span
             style={{
-              fontSize: "15px",
+              fontSize: "16px",
               fontWeight: "800",
               color: "#fff",
               letterSpacing: "-0.3px",
@@ -174,34 +173,31 @@ function Dashboard() {
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div
               style={{
-                width: "30px",
-                height: "30px",
+                width: "32px",
+                height: "32px",
                 borderRadius: "50%",
                 background: "#0f5c2e",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "11px",
+                fontSize: "12px",
                 fontWeight: "800",
                 color: "#fff",
               }}
             >
               {initials}
             </div>
-            <span
-              style={{ fontSize: "12px", color: "#94a3b8", display: "none" }}
-              className="md-show"
-            >
+            <span style={{ fontSize: "13px", color: "#94a3b8" }}>
               {user.fullName}
             </span>
           </div>
           <button
             onClick={handleLogout}
             style={{
-              padding: "6px 14px",
+              padding: "7px 16px",
               border: "1px solid #1e293b",
               borderRadius: "7px",
-              fontSize: "12px",
+              fontSize: "13px",
               fontWeight: "500",
               color: "#94a3b8",
               background: "transparent",
@@ -213,36 +209,34 @@ function Dashboard() {
         </div>
       </nav>
 
-      <div
-        style={{ maxWidth: "960px", margin: "0 auto", padding: "20px 20px" }}
-      >
+      <div style={{ maxWidth: "960px", margin: "0 auto", padding: "20px" }}>
         {/* Welcome Banner */}
         <div
           style={{
             background: "linear-gradient(135deg, #0f5c2e 0%, #1a7a3f 100%)",
             borderRadius: "14px",
-            padding: "22px 28px",
+            padding: "24px 28px",
             marginBottom: "16px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             flexWrap: "wrap",
-            gap: "12px",
+            gap: "14px",
           }}
         >
           <div>
             <h1
               style={{
-                fontSize: "20px",
+                fontSize: "22px",
                 fontWeight: "800",
                 color: "#fff",
                 letterSpacing: "-0.5px",
-                marginBottom: "4px",
+                marginBottom: "6px",
               }}
             >
               Good day, {user.fullName.split(" ")[0]} 👋
             </h1>
-            <p style={{ fontSize: "13px", color: "#86efac" }}>
+            <p style={{ fontSize: "14px", color: "#86efac" }}>
               {businesses.length === 0
                 ? "Add your first business to get started"
                 : `Managing ${businesses.length} business${businesses.length > 1 ? "es" : ""} · Stay compliant`}
@@ -252,12 +246,12 @@ function Dashboard() {
             <button
               onClick={() => navigate("/new-filing")}
               style={{
-                padding: "9px 18px",
+                padding: "10px 20px",
                 background: "#fff",
                 color: "#0f5c2e",
                 border: "none",
                 borderRadius: "8px",
-                fontSize: "13px",
+                fontSize: "14px",
                 fontWeight: "700",
                 cursor: "pointer",
               }}
@@ -267,12 +261,12 @@ function Dashboard() {
             <button
               onClick={() => navigate("/business/setup")}
               style={{
-                padding: "9px 18px",
+                padding: "10px 20px",
                 background: "rgba(255,255,255,0.12)",
                 color: "#fff",
                 border: "1px solid rgba(255,255,255,0.2)",
                 borderRadius: "8px",
-                fontSize: "13px",
+                fontSize: "14px",
                 fontWeight: "600",
                 cursor: "pointer",
               }}
@@ -282,7 +276,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Stats */}
+        {/* Stats Cards */}
         <div
           style={{
             display: "grid",
@@ -327,11 +321,12 @@ function Dashboard() {
               style={{
                 background: "#fff",
                 border: "1px solid #e8ede8",
-                borderRadius: "10px",
-                padding: "14px 16px",
+                borderRadius: "12px",
+                padding: "16px 18px",
                 textAlign: "left",
                 cursor: "pointer",
                 transition: "border-color 0.15s",
+                width: "100%",
               }}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.borderColor = "#0f5c2e")
@@ -345,39 +340,39 @@ function Dashboard() {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  marginBottom: "8px",
+                  marginBottom: "10px",
                 }}
               >
                 <div
                   style={{
-                    width: "30px",
-                    height: "30px",
+                    width: "34px",
+                    height: "34px",
                     background: s.bg,
-                    borderRadius: "7px",
+                    borderRadius: "8px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "15px",
+                    fontSize: "18px",
                   }}
                 >
                   {s.icon}
                 </div>
-                <span style={{ fontSize: "10px", color: "#94a3b8" }}>↓</span>
+                <span style={{ fontSize: "11px", color: "#94a3b8" }}>↓</span>
               </div>
               <div
                 style={{
-                  fontSize: "24px",
+                  fontSize: "30px",
                   fontWeight: "900",
                   color: "#0a1628",
                   letterSpacing: "-1px",
-                  marginBottom: "2px",
+                  marginBottom: "4px",
                 }}
               >
                 {s.value}
               </div>
               <div
                 style={{
-                  fontSize: "11px",
+                  fontSize: "13px",
                   color: "#64748b",
                   fontWeight: "500",
                 }}
@@ -386,10 +381,10 @@ function Dashboard() {
               </div>
               <div
                 style={{
-                  fontSize: "10px",
+                  fontSize: "12px",
                   color: "#0f5c2e",
                   fontWeight: "600",
-                  marginTop: "4px",
+                  marginTop: "6px",
                 }}
               >
                 Tap to view →
@@ -398,30 +393,27 @@ function Dashboard() {
           ))}
         </div>
 
-        {/* Content */}
+        {/* Content Sections */}
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           {/* Quick Actions */}
           <div
             ref={quickActionsRef}
             style={{
               background: "#fff",
-              borderRadius: "12px",
+              borderRadius: "14px",
               border: "1px solid #e8ede8",
               overflow: "hidden",
             }}
           >
             <div
               style={{
-                padding: "14px 18px",
+                padding: "16px 20px",
                 borderBottom: "1px solid #f1f5f1",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
               }}
             >
               <span
                 style={{
-                  fontSize: "13px",
+                  fontSize: "15px",
                   fontWeight: "700",
                   color: "#0a1628",
                 }}
@@ -430,12 +422,7 @@ function Dashboard() {
               </span>
             </div>
             <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
-                gap: "0",
-                borderBottom: "1px solid #f1f5f1",
-              }}
+              style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}
             >
               {[
                 {
@@ -467,7 +454,7 @@ function Dashboard() {
                   key={i}
                   onClick={() => navigate(`/new-filing?type=${a.type}`)}
                   style={{
-                    padding: "16px",
+                    padding: "18px 16px",
                     borderRight: i < 3 ? "1px solid #f1f5f1" : "none",
                     background: "transparent",
                     border: "none",
@@ -482,20 +469,20 @@ function Dashboard() {
                     (e.currentTarget.style.background = "transparent")
                   }
                 >
-                  <div style={{ fontSize: "22px", marginBottom: "8px" }}>
+                  <div style={{ fontSize: "26px", marginBottom: "10px" }}>
                     {a.icon}
                   </div>
                   <div
                     style={{
-                      fontSize: "12px",
+                      fontSize: "14px",
                       fontWeight: "700",
                       color: "#0a1628",
-                      marginBottom: "2px",
+                      marginBottom: "4px",
                     }}
                   >
                     {a.label}
                   </div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8" }}>
+                  <div style={{ fontSize: "12px", color: "#94a3b8" }}>
                     {a.desc}
                   </div>
                 </button>
@@ -508,14 +495,14 @@ function Dashboard() {
             ref={recentFilingsRef}
             style={{
               background: "#fff",
-              borderRadius: "12px",
+              borderRadius: "14px",
               border: "1px solid #e8ede8",
               overflow: "hidden",
             }}
           >
             <div
               style={{
-                padding: "14px 18px",
+                padding: "16px 20px",
                 borderBottom: "1px solid #f1f5f1",
                 display: "flex",
                 justifyContent: "space-between",
@@ -524,7 +511,7 @@ function Dashboard() {
             >
               <span
                 style={{
-                  fontSize: "13px",
+                  fontSize: "15px",
                   fontWeight: "700",
                   color: "#0a1628",
                 }}
@@ -534,7 +521,7 @@ function Dashboard() {
               <button
                 onClick={() => navigate("/new-filing")}
                 style={{
-                  fontSize: "12px",
+                  fontSize: "13px",
                   color: "#0f5c2e",
                   fontWeight: "600",
                   background: "none",
@@ -546,23 +533,23 @@ function Dashboard() {
               </button>
             </div>
             {filings.length === 0 ? (
-              <div style={{ padding: "40px", textAlign: "center" }}>
-                <div style={{ fontSize: "32px", marginBottom: "10px" }}>📭</div>
+              <div style={{ padding: "48px", textAlign: "center" }}>
+                <div style={{ fontSize: "40px", marginBottom: "12px" }}>📭</div>
                 <p
                   style={{
-                    fontSize: "13px",
+                    fontSize: "15px",
                     fontWeight: "600",
                     color: "#0a1628",
-                    marginBottom: "4px",
+                    marginBottom: "6px",
                   }}
                 >
                   No filings yet
                 </p>
                 <p
                   style={{
-                    fontSize: "12px",
+                    fontSize: "13px",
                     color: "#94a3b8",
-                    marginBottom: "16px",
+                    marginBottom: "20px",
                   }}
                 >
                   Start your first CAC filing to see it here
@@ -570,12 +557,12 @@ function Dashboard() {
                 <button
                   onClick={() => navigate("/new-filing")}
                   style={{
-                    padding: "9px 20px",
+                    padding: "10px 24px",
                     background: "#0f5c2e",
                     color: "#fff",
                     border: "none",
                     borderRadius: "8px",
-                    fontSize: "12px",
+                    fontSize: "14px",
                     fontWeight: "700",
                     cursor: "pointer",
                   }}
@@ -592,7 +579,7 @@ function Dashboard() {
                       key={filing.id}
                       onClick={() => navigate(`/filing/${filing.id}`)}
                       style={{
-                        padding: "12px 18px",
+                        padding: "14px 20px",
                         borderBottom:
                           i < filings.slice(0, 5).length - 1
                             ? "1px solid #f8faf8"
@@ -613,15 +600,15 @@ function Dashboard() {
                       <div>
                         <p
                           style={{
-                            fontSize: "13px",
+                            fontSize: "15px",
                             fontWeight: "600",
                             color: "#0a1628",
-                            marginBottom: "2px",
+                            marginBottom: "4px",
                           }}
                         >
                           {formatFilingType(filing.filingType)}
                         </p>
-                        <p style={{ fontSize: "11px", color: "#64748b" }}>
+                        <p style={{ fontSize: "13px", color: "#64748b" }}>
                           {filing.business?.businessName} ·{" "}
                           {new Date(filing.createdAt).toLocaleDateString(
                             "en-NG",
@@ -631,13 +618,13 @@ function Dashboard() {
                         {filing.status === "AWAITING_INFO" && (
                           <p
                             style={{
-                              fontSize: "11px",
+                              fontSize: "12px",
                               color: "#ea580c",
                               fontWeight: "600",
-                              marginTop: "2px",
+                              marginTop: "4px",
                             }}
                           >
-                            ⚠️ Action required
+                            ⚠️ Action required — tap to respond
                           </p>
                         )}
                       </div>
@@ -646,16 +633,16 @@ function Dashboard() {
                           display: "flex",
                           flexDirection: "column",
                           alignItems: "flex-end",
-                          gap: "4px",
+                          gap: "6px",
                         }}
                       >
                         <span
                           style={{
-                            padding: "3px 10px",
+                            padding: "4px 12px",
                             borderRadius: "100px",
                             background: s.bg,
                             color: s.color,
-                            fontSize: "11px",
+                            fontSize: "12px",
                             fontWeight: "700",
                           }}
                         >
@@ -664,9 +651,9 @@ function Dashboard() {
                         {filing.amount && (
                           <span
                             style={{
-                              fontSize: "11px",
+                              fontSize: "13px",
                               color: "#0f5c2e",
-                              fontWeight: "600",
+                              fontWeight: "700",
                             }}
                           >
                             {formatCurrency(filing.amount)}
@@ -685,14 +672,14 @@ function Dashboard() {
             ref={myBusinessesRef}
             style={{
               background: "#fff",
-              borderRadius: "12px",
+              borderRadius: "14px",
               border: "1px solid #e8ede8",
               overflow: "hidden",
             }}
           >
             <div
               style={{
-                padding: "14px 18px",
+                padding: "16px 20px",
                 borderBottom: "1px solid #f1f5f1",
                 display: "flex",
                 justifyContent: "space-between",
@@ -701,7 +688,7 @@ function Dashboard() {
             >
               <span
                 style={{
-                  fontSize: "13px",
+                  fontSize: "15px",
                   fontWeight: "700",
                   color: "#0a1628",
                 }}
@@ -711,7 +698,7 @@ function Dashboard() {
               <button
                 onClick={() => navigate("/business/setup")}
                 style={{
-                  fontSize: "12px",
+                  fontSize: "13px",
                   color: "#0f5c2e",
                   fontWeight: "600",
                   background: "none",
@@ -723,23 +710,23 @@ function Dashboard() {
               </button>
             </div>
             {businesses.length === 0 ? (
-              <div style={{ padding: "40px", textAlign: "center" }}>
-                <div style={{ fontSize: "32px", marginBottom: "10px" }}>🏢</div>
+              <div style={{ padding: "48px", textAlign: "center" }}>
+                <div style={{ fontSize: "40px", marginBottom: "12px" }}>🏢</div>
                 <p
                   style={{
-                    fontSize: "13px",
+                    fontSize: "15px",
                     fontWeight: "600",
                     color: "#0a1628",
-                    marginBottom: "4px",
+                    marginBottom: "6px",
                   }}
                 >
                   No businesses yet
                 </p>
                 <p
                   style={{
-                    fontSize: "12px",
+                    fontSize: "13px",
                     color: "#94a3b8",
-                    marginBottom: "16px",
+                    marginBottom: "20px",
                   }}
                 >
                   Add your first business to start filing
@@ -747,12 +734,12 @@ function Dashboard() {
                 <button
                   onClick={() => navigate("/business/setup")}
                   style={{
-                    padding: "9px 20px",
+                    padding: "10px 24px",
                     background: "#0f5c2e",
                     color: "#fff",
                     border: "none",
                     borderRadius: "8px",
-                    fontSize: "12px",
+                    fontSize: "14px",
                     fontWeight: "700",
                     cursor: "pointer",
                   }}
@@ -764,7 +751,10 @@ function Dashboard() {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                  gridTemplateColumns:
+                    businesses.length === 1
+                      ? "1fr"
+                      : "repeat(auto-fill, minmax(300px, 1fr))",
                   gap: "1px",
                   background: "#f1f5f1",
                 }}
@@ -772,16 +762,16 @@ function Dashboard() {
                 {businesses.map((business) => (
                   <div
                     key={business.id}
-                    style={{ background: "#fff", padding: "16px 18px" }}
+                    style={{ background: "#fff", padding: "18px 20px" }}
                   >
                     {/* Compliance Alert */}
                     {business.complianceInfo &&
                       business.complianceInfo.complianceStatus !== "good" && (
                         <div
                           style={{
-                            padding: "8px 12px",
+                            padding: "10px 14px",
                             borderRadius: "8px",
-                            marginBottom: "12px",
+                            marginBottom: "14px",
                             background:
                               business.complianceInfo.complianceColor === "red"
                                 ? "#fef2f2"
@@ -794,7 +784,7 @@ function Dashboard() {
                         >
                           <p
                             style={{
-                              fontSize: "11px",
+                              fontSize: "13px",
                               fontWeight: "600",
                               color:
                                 business.complianceInfo.complianceColor ===
@@ -813,7 +803,7 @@ function Dashboard() {
                               navigate("/new-filing?type=ANNUAL_RETURNS")
                             }
                             style={{
-                              padding: "4px 10px",
+                              padding: "5px 12px",
                               background:
                                 business.complianceInfo.complianceColor ===
                                 "red"
@@ -822,10 +812,11 @@ function Dashboard() {
                               color: "#fff",
                               border: "none",
                               borderRadius: "6px",
-                              fontSize: "10px",
+                              fontSize: "12px",
                               fontWeight: "700",
                               cursor: "pointer",
                               whiteSpace: "nowrap",
+                              marginLeft: "8px",
                             }}
                           >
                             File Now
@@ -833,36 +824,42 @@ function Dashboard() {
                         </div>
                       )}
 
+                    {/* Business Info */}
                     <div
                       style={{
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "flex-start",
-                        marginBottom: "12px",
+                        marginBottom: "14px",
                       }}
                     >
                       <div>
                         <p
                           style={{
-                            fontSize: "14px",
+                            fontSize: "16px",
                             fontWeight: "800",
                             color: "#0a1628",
-                            marginBottom: "2px",
+                            marginBottom: "4px",
                             letterSpacing: "-0.3px",
                           }}
                         >
                           {business.businessName}
                         </p>
-                        <p style={{ fontSize: "11px", color: "#64748b" }}>
+                        <p
+                          style={{
+                            fontSize: "13px",
+                            color: "#64748b",
+                            marginBottom: "4px",
+                          }}
+                        >
                           {formatBusinessType(business.businessType)}
                         </p>
                         {business.rcNumber && (
                           <p
                             style={{
-                              fontSize: "11px",
+                              fontSize: "13px",
                               color: "#0f5c2e",
                               fontWeight: "700",
-                              marginTop: "2px",
                             }}
                           >
                             RC: {business.rcNumber}
@@ -874,55 +871,56 @@ function Dashboard() {
                           display: "flex",
                           flexDirection: "column",
                           alignItems: "flex-end",
-                          gap: "4px",
+                          gap: "6px",
                         }}
                       >
                         <span
                           style={{
-                            padding: "3px 10px",
+                            padding: "4px 12px",
                             borderRadius: "100px",
                             background: "#e8f5ee",
                             color: "#0f5c2e",
-                            fontSize: "10px",
+                            fontSize: "12px",
                             fontWeight: "700",
                           }}
                         >
                           {business.status}
                         </span>
-                        <span style={{ fontSize: "10px", color: "#94a3b8" }}>
+                        <span style={{ fontSize: "12px", color: "#94a3b8" }}>
                           {business.filings.length} filing(s)
                         </span>
                       </div>
                     </div>
 
+                    {/* Compliance Timeline */}
                     {business.complianceInfo && business.registrationDate && (
                       <div
                         style={{
                           borderTop: "1px solid #f1f5f1",
-                          paddingTop: "10px",
+                          paddingTop: "12px",
                         }}
                       >
                         <div
                           style={{
                             display: "grid",
                             gridTemplateColumns: "1fr 1fr",
-                            gap: "8px",
-                            marginBottom: "8px",
+                            gap: "12px",
+                            marginBottom: "10px",
                           }}
                         >
                           <div>
                             <p
                               style={{
-                                fontSize: "10px",
+                                fontSize: "12px",
                                 color: "#94a3b8",
-                                marginBottom: "2px",
+                                marginBottom: "4px",
                               }}
                             >
-                              Registered
+                              Date Registered
                             </p>
                             <p
                               style={{
-                                fontSize: "11px",
+                                fontSize: "13px",
                                 fontWeight: "600",
                                 color: "#0a1628",
                               }}
@@ -939,16 +937,16 @@ function Dashboard() {
                           <div>
                             <p
                               style={{
-                                fontSize: "10px",
+                                fontSize: "12px",
                                 color: "#94a3b8",
-                                marginBottom: "2px",
+                                marginBottom: "4px",
                               }}
                             >
                               Next Filing Due
                             </p>
                             <p
                               style={{
-                                fontSize: "11px",
+                                fontSize: "13px",
                                 fontWeight: "600",
                                 color:
                                   business.complianceInfo.complianceColor ===
@@ -975,15 +973,15 @@ function Dashboard() {
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
-                            marginBottom: "4px",
+                            marginBottom: "6px",
                           }}
                         >
-                          <span style={{ fontSize: "10px", color: "#64748b" }}>
-                            Compliance
+                          <span style={{ fontSize: "12px", color: "#64748b" }}>
+                            Compliance Status
                           </span>
                           <span
                             style={{
-                              fontSize: "10px",
+                              fontSize: "12px",
                               fontWeight: "700",
                               color:
                                 business.complianceInfo.complianceColor ===
@@ -1007,7 +1005,7 @@ function Dashboard() {
                         </div>
                         <div
                           style={{
-                            height: "4px",
+                            height: "5px",
                             borderRadius: "100px",
                             background: "#f1f5f1",
                           }}
@@ -1035,11 +1033,11 @@ function Dashboard() {
                       <div
                         style={{
                           borderTop: "1px solid #f1f5f1",
-                          paddingTop: "8px",
+                          paddingTop: "10px",
                         }}
                       >
-                        <p style={{ fontSize: "11px", color: "#d97706" }}>
-                          ⚠️ Add registration date to track compliance
+                        <p style={{ fontSize: "13px", color: "#d97706" }}>
+                          ⚠️ Add registration date to track compliance deadlines
                         </p>
                       </div>
                     )}
