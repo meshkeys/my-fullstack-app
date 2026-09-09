@@ -7,6 +7,8 @@ const {
   sendMessageToClient,
   requestDocuments,
   getAdminStats,
+  getPrices,
+  updatePrice,
 } = require("../controllers/adminController");
 const { protect } = require("../middleware/authMiddleware");
 const { adminOnly } = require("../middleware/adminMiddleware");
@@ -21,5 +23,7 @@ router.get("/filings/:id", getFilingDetail);
 router.put("/filings/:id/status", updateFilingStatus);
 router.post("/filings/:id/message", sendMessageToClient);
 router.post("/filings/:id/request-docs", requestDocuments);
+router.get("/prices", getPrices);
+router.put("/prices/:filingType", updatePrice);
 
 module.exports = router;

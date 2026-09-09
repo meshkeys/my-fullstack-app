@@ -123,13 +123,25 @@ const REQUIRED_DOCUMENTS = {
 
 const getFilingTypes = async (req, res) => {
   try {
+    // Fetch prices from database
+    const prices = await prisma.filingPrice.findMany({
+      where: { isActive: true },
+    });
+
+    const getPriceForType = (type) => {
+      const price = prices.find((p) => p.filingType === type);
+      return price
+        ? { serviceFee: price.serviceFee, govtFee: price.govtFee }
+        : { serviceFee: 0, govtFee: 3000 };
+    };
+
     const filingTypes = [
       {
         type: "ANNUAL_RETURNS",
         label: "Annual Returns",
         description: "File your yearly annual returns with CAC",
-        cost: FILING_COSTS.ANNUAL_RETURNS,
-        requiredDocuments: REQUIRED_DOCUMENTS.ANNUAL_RETURNS,
+        ...getPriceForType("ANNUAL_RETURNS"),
+        cost: getPriceForType("ANNUAL_RETURNS").serviceFee,
         estimatedTime: "24-48 hours",
         icon: "📝",
       },
@@ -137,8 +149,8 @@ const getFilingTypes = async (req, res) => {
         type: "CHANGE_OF_DIRECTORS",
         label: "Change of Directors",
         description: "Add, remove or update director information",
-        cost: FILING_COSTS.CHANGE_OF_DIRECTORS,
-        requiredDocuments: REQUIRED_DOCUMENTS.CHANGE_OF_DIRECTORS,
+        ...getPriceForType("CHANGE_OF_DIRECTORS"),
+        cost: getPriceForType("CHANGE_OF_DIRECTORS").serviceFee,
         estimatedTime: "48-72 hours",
         icon: "👥",
       },
@@ -146,8 +158,8 @@ const getFilingTypes = async (req, res) => {
         type: "CHANGE_OF_ADDRESS",
         label: "Change of Address",
         description: "Update your registered business address",
-        cost: FILING_COSTS.CHANGE_OF_ADDRESS,
-        requiredDocuments: REQUIRED_DOCUMENTS.CHANGE_OF_ADDRESS,
+        ...getPriceForType("CHANGE_OF_ADDRESS"),
+        cost: getPriceForType("CHANGE_OF_ADDRESS").serviceFee,
         estimatedTime: "24-48 hours",
         icon: "📍",
       },
@@ -155,8 +167,8 @@ const getFilingTypes = async (req, res) => {
         type: "CHANGE_OF_NAME",
         label: "Change of Name",
         description: "Change your registered business name",
-        cost: FILING_COSTS.CHANGE_OF_NAME,
-        requiredDocuments: REQUIRED_DOCUMENTS.CHANGE_OF_NAME,
+        ...getPriceForType("CHANGE_OF_NAME"),
+        cost: getPriceForType("CHANGE_OF_NAME").serviceFee,
         estimatedTime: "5-7 days",
         icon: "✏️",
       },
@@ -164,8 +176,8 @@ const getFilingTypes = async (req, res) => {
         type: "INCREASE_SHARE_CAPITAL",
         label: "Increase Share Capital",
         description: "Increase your company share capital",
-        cost: FILING_COSTS.INCREASE_SHARE_CAPITAL,
-        requiredDocuments: REQUIRED_DOCUMENTS.INCREASE_SHARE_CAPITAL,
+        ...getPriceForType("INCREASE_SHARE_CAPITAL"),
+        cost: getPriceForType("INCREASE_SHARE_CAPITAL").serviceFee,
         estimatedTime: "5-7 days",
         icon: "💰",
       },
@@ -173,8 +185,8 @@ const getFilingTypes = async (req, res) => {
         type: "AUDITED_ACCOUNTS",
         label: "Audited Accounts",
         description: "Submit your audited financial accounts",
-        cost: FILING_COSTS.AUDITED_ACCOUNTS,
-        requiredDocuments: REQUIRED_DOCUMENTS.AUDITED_ACCOUNTS,
+        ...getPriceForType("AUDITED_ACCOUNTS"),
+        cost: getPriceForType("AUDITED_ACCOUNTS").serviceFee,
         estimatedTime: "48-72 hours",
         icon: "📊",
       },

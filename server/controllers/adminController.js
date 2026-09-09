@@ -293,6 +293,47 @@ const getAdminStats = async (req, res) => {
   }
 };
 
+// @desc    Get all prices
+// @route   GET /api/admin/prices
+const getPrices = async (req, res) => {
+  try {
+    const prices = await prisma.filingPrice.findMany({
+      orderBy: { filingType: "asc" },
+    });
+    res.status(200).json({ success: true, prices });
+  } catch (error) {
+    console.error("Get prices error:", error.message);
+    res.status(500).json({ success: false, message: "Something went wrong." });
+  }
+};
+
+// @desc    Update price
+// @route   PUT /api/admin/prices/:filingType
+const updatePrice = async (req, res) => {
+  try {
+    const { serviceFee, govtFee } = req.body;
+    const { filingType } = req.params;
+
+    const price = await prisma.filingPrice.update({
+      where: { filingType },
+      data: {
+        serviceFee: parseFloat(serviceFee),
+        govtFee: parseFloat(govtFee),
+        updatedBy: req.user.fullName,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Price updated successfully!",
+      price,
+    });
+  } catch (error) {
+    console.error("Update price error:", error.message);
+    res.status(500).json({ success: false, message: "Something went wrong." });
+  }
+};
+
 module.exports = {
   getAllFilings,
   getFilingDetail,
@@ -300,4 +341,6 @@ module.exports = {
   sendMessageToClient,
   requestDocuments,
   getAdminStats,
+  getPrices,
+  updatePrice,
 };

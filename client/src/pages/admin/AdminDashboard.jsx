@@ -102,7 +102,13 @@ function AdminDashboard() {
           <span className="text-xl font-bold">⚖️ CAC Filing</span>
           <span className="text-gray-400 text-sm">Admin Portal</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/admin/pricing")}
+            className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition"
+          >
+            💰 Pricing
+          </button>
           <span className="text-gray-300 text-sm">👋 {adminUser.fullName}</span>
           <button
             onClick={handleLogout}

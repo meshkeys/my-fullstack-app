@@ -11,7 +11,12 @@ import FilingDetail from "./pages/FilingDetail";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminFilingDetail from "./pages/admin/AdminFilingDetail";
+import AdminPricing from "./pages/admin/AdminPricing";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminPricing from "./pages/admin/AdminPricing";
+
+// Inside Routes:
+<Route path="/admin/pricing" element={<AdminPricing />} />;
 
 function App() {
   return (
@@ -23,6 +28,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/admin/pricing" element={<AdminPricing />} />
 
         {/* Protected client routes */}
         <Route
@@ -62,6 +68,7 @@ function App() {
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/filing/:id" element={<AdminFilingDetail />} />
+        <Route path="/admin/pricing" element={<AdminPricing />} />
       </Routes>
     </Router>
   );
