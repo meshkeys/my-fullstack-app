@@ -12,12 +12,14 @@ const {
 } = require("../controllers/filingController");
 const { protect } = require("../middleware/authMiddleware");
 const { upload } = require("../middleware/uploadMiddleware");
+const { downloadFile } = require("../controllers/filingController");
 
 router.use(protect);
 
 router.get("/types", getFilingTypes);
 router.post("/", createFiling);
 router.get("/", getMyFilings);
+router.get("/download", downloadFile);
 router.get("/:id", getFilingById);
 router.get("/:id/messages", getFilingMessages);
 router.post("/:id/messages", replyToFiling);

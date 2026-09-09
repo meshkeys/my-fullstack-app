@@ -102,6 +102,27 @@ function AdminFilingDetail() {
     }
   };
 
+  const handleDownload = async (fileUrl, fileName) => {
+    try {
+      const response = await axios.get(`${baseUrl}/api/filings/download`, {
+        headers,
+        params: { url: fileUrl, name: fileName },
+        responseType: "blob",
+      });
+      const blobUrl = window.URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      alert("Failed to download file.");
+    }
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       PENDING: "bg-yellow-100 text-yellow-700",
@@ -306,30 +327,30 @@ function AdminFilingDetail() {
                                 ✅ Client uploaded {msg.attachments.length}{" "}
                                 document(s):
                               </p>
-                              {msg.attachments.map((file, i) => (
-                                <a
-                                  key={i}
-                                  href={`${file.url || file.path || file.secure_url}?fl_attachment=true`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  download={
-                                    file.name ||
-                                    file.originalname ||
-                                    `Document ${i + 1}`
-                                  }
-                                  className="flex items-center gap-2 text-xs text-blue-300 underline hover:text-blue-200 py-1 border border-blue-800 rounded-lg px-2 mt-1"
-                                >
-                                  <span>📥</span>
-                                  <span>
-                                    {file.name ||
-                                      file.originalname ||
-                                      `Document ${i + 1}`}
-                                  </span>
-                                  <span className="ml-auto text-gray-400">
-                                    Download
-                                  </span>
-                                </a>
-                              ))}
+                              {msg.attachments.map((file, i) => {
+                                const fileUrl =
+                                  file.url || file.path || file.secure_url;
+                                const fileName =
+                                  file.name ||
+                                  file.originalname ||
+                                  `Document ${i + 1}`;
+                                return (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() =>
+                                      handleDownload(fileUrl, fileName)
+                                    }
+                                    className="w-full flex items-center gap-2 text-xs text-blue-300 hover:text-blue-200 py-1 border border-blue-800 rounded-lg px-2 mt-1"
+                                  >
+                                    <span>📥</span>
+                                    <span>{fileName}</span>
+                                    <span className="ml-auto text-gray-400">
+                                      Download
+                                    </span>
+                                  </button>
+                                );
+                              })}
                             </div>
                           )}
 
