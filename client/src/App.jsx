@@ -13,7 +13,6 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminFilingDetail from "./pages/admin/AdminFilingDetail";
 import AdminPricing from "./pages/admin/AdminPricing";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AdminPricing from "./pages/admin/AdminPricing";
 
 // Inside Routes:
 <Route path="/admin/pricing" element={<AdminPricing />} />;
