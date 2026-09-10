@@ -47,10 +47,10 @@ function Register() {
 
   const inputStyle = {
     width: "100%",
-    padding: "14px 16px",
+    padding: "15px 18px",
     border: "1.5px solid #d1dbd1",
     borderRadius: "10px",
-    fontSize: "15px",
+    fontSize: "16px",
     color: "#0a1628",
     background: "#fff",
     outline: "none",
@@ -65,24 +65,23 @@ function Register() {
         fontFamily: "-apple-system, 'Inter', sans-serif",
       }}
     >
-      {/* Left Panel — Dark Branding */}
+      {/* Left Panel */}
       <div
         style={{
-          width: "420px",
+          width: "440px",
           background: "#0a1628",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          padding: "40px",
+          padding: "44px",
           flexShrink: 0,
         }}
       >
-        {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div
             style={{
-              width: "36px",
-              height: "36px",
+              width: "38px",
+              height: "38px",
               background: "#0f5c2e",
               borderRadius: "9px",
               display: "flex",
@@ -91,14 +90,14 @@ function Register() {
             }}
           >
             <span
-              style={{ color: "#fff", fontSize: "14px", fontWeight: "800" }}
+              style={{ color: "#fff", fontSize: "15px", fontWeight: "800" }}
             >
               CF
             </span>
           </div>
           <span
             style={{
-              fontSize: "18px",
+              fontSize: "20px",
               fontWeight: "800",
               color: "#fff",
               letterSpacing: "-0.3px",
@@ -108,32 +107,31 @@ function Register() {
           </span>
         </div>
 
-        {/* Main Content */}
         <div>
           <div
             style={{
               display: "inline-block",
-              padding: "6px 14px",
+              padding: "7px 16px",
               borderRadius: "6px",
               background: "rgba(74,222,128,0.15)",
               color: "#4ade80",
-              fontSize: "13px",
+              fontSize: "14px",
               fontWeight: "700",
               letterSpacing: "0.8px",
               textTransform: "uppercase",
-              marginBottom: "20px",
+              marginBottom: "22px",
             }}
           >
             Get Started Free
           </div>
           <h1
             style={{
-              fontSize: "36px",
+              fontSize: "40px",
               fontWeight: "900",
               color: "#fff",
-              letterSpacing: "-1px",
+              letterSpacing: "-1.5px",
               lineHeight: "1.1",
-              marginBottom: "16px",
+              marginBottom: "18px",
             }}
           >
             Join thousands of
@@ -142,17 +140,17 @@ function Register() {
           </h1>
           <p
             style={{
-              fontSize: "16px",
+              fontSize: "17px",
               color: "#64748b",
               lineHeight: "1.65",
-              marginBottom: "40px",
+              marginBottom: "44px",
             }}
           >
             CAC Filing makes it easy to stay compliant. Our legal team handles
             everything — you just answer a few simple questions.
           </p>
           <div
-            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+            style={{ display: "flex", flexDirection: "column", gap: "18px" }}
           >
             {[
               { icon: "✅", text: "Easy step-by-step filing wizard" },
@@ -162,18 +160,18 @@ function Register() {
             ].map((item, i) => (
               <div
                 key={i}
-                style={{ display: "flex", alignItems: "center", gap: "12px" }}
+                style={{ display: "flex", alignItems: "center", gap: "14px" }}
               >
                 <div
                   style={{
-                    width: "36px",
-                    height: "36px",
+                    width: "40px",
+                    height: "40px",
                     background: "rgba(255,255,255,0.06)",
-                    borderRadius: "8px",
+                    borderRadius: "9px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "18px",
+                    fontSize: "20px",
                     flexShrink: 0,
                   }}
                 >
@@ -181,7 +179,7 @@ function Register() {
                 </div>
                 <span
                   style={{
-                    fontSize: "15px",
+                    fontSize: "16px",
                     color: "#94a3b8",
                     fontWeight: "500",
                   }}
@@ -193,13 +191,12 @@ function Register() {
           </div>
         </div>
 
-        {/* Footer */}
-        <p style={{ fontSize: "13px", color: "#334155" }}>
+        <p style={{ fontSize: "14px", color: "#334155" }}>
           © 2024 CACFiling · Helping Nigerian businesses stay compliant
         </p>
       </div>
 
-      {/* Right Panel — Form */}
+      {/* Right Panel */}
       <div
         style={{
           flex: 1,
@@ -211,20 +208,20 @@ function Register() {
           overflowY: "auto",
         }}
       >
-        <div style={{ width: "100%", maxWidth: "420px" }}>
+        <div style={{ width: "100%", maxWidth: "460px" }}>
           <h2
             style={{
-              fontSize: "28px",
+              fontSize: "32px",
               fontWeight: "900",
               color: "#0a1628",
-              letterSpacing: "-0.8px",
-              marginBottom: "6px",
+              letterSpacing: "-1px",
+              marginBottom: "8px",
             }}
           >
             Create your account
           </h2>
           <p
-            style={{ fontSize: "16px", color: "#64748b", marginBottom: "32px" }}
+            style={{ fontSize: "17px", color: "#64748b", marginBottom: "36px" }}
           >
             Already have an account?{" "}
             <span
@@ -238,12 +235,12 @@ function Register() {
           {error && (
             <div
               style={{
-                marginBottom: "20px",
-                padding: "14px 16px",
+                marginBottom: "24px",
+                padding: "16px",
                 background: "#fef2f2",
                 border: "1px solid #fecaca",
                 borderRadius: "10px",
-                fontSize: "14px",
+                fontSize: "15px",
                 color: "#dc2626",
                 fontWeight: "500",
               }}
@@ -254,13 +251,13 @@ function Register() {
 
           <form
             onSubmit={handleSubmit}
-            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+            style={{ display: "flex", flexDirection: "column", gap: "18px" }}
           >
             <div>
               <label
                 style={{
                   display: "block",
-                  fontSize: "14px",
+                  fontSize: "15px",
                   fontWeight: "600",
                   color: "#0a1628",
                   marginBottom: "8px",
@@ -285,7 +282,7 @@ function Register() {
               <label
                 style={{
                   display: "block",
-                  fontSize: "14px",
+                  fontSize: "15px",
                   fontWeight: "600",
                   color: "#0a1628",
                   marginBottom: "8px",
@@ -310,7 +307,7 @@ function Register() {
               <label
                 style={{
                   display: "block",
-                  fontSize: "14px",
+                  fontSize: "15px",
                   fontWeight: "600",
                   color: "#0a1628",
                   marginBottom: "8px",
@@ -334,7 +331,7 @@ function Register() {
               <label
                 style={{
                   display: "block",
-                  fontSize: "14px",
+                  fontSize: "15px",
                   fontWeight: "600",
                   color: "#0a1628",
                   marginBottom: "8px",
@@ -359,7 +356,7 @@ function Register() {
               <label
                 style={{
                   display: "block",
-                  fontSize: "14px",
+                  fontSize: "15px",
                   fontWeight: "600",
                   color: "#0a1628",
                   marginBottom: "8px",
@@ -385,15 +382,15 @@ function Register() {
               disabled={loading}
               style={{
                 width: "100%",
-                padding: "15px",
+                padding: "16px",
                 background: loading ? "#64748b" : "#0f5c2e",
                 color: "#fff",
                 border: "none",
                 borderRadius: "10px",
-                fontSize: "16px",
+                fontSize: "17px",
                 fontWeight: "700",
                 cursor: loading ? "not-allowed" : "pointer",
-                marginTop: "8px",
+                marginTop: "4px",
                 letterSpacing: "-0.2px",
               }}
             >
@@ -403,8 +400,8 @@ function Register() {
 
           <p
             style={{
-              marginTop: "24px",
-              fontSize: "13px",
+              marginTop: "28px",
+              fontSize: "14px",
               textAlign: "center",
               color: "#94a3b8",
             }}
