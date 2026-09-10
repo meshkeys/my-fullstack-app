@@ -16,28 +16,23 @@ function Register() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
     if (formData.password !== formData.confirmPassword) {
       return setError("Passwords do not match");
     }
-
     try {
       setLoading(true);
-      // Replace axios.post with:
       const response = await api.post("/api/auth/register", {
         fullName: formData.fullName,
         email: formData.email,
         password: formData.password,
         phoneNumber: formData.phoneNumber,
       });
-
       login(response.data.user, response.data.token);
       navigate("/business/setup");
     } catch (err) {
@@ -50,60 +45,227 @@ function Register() {
     }
   };
 
+  const inputStyle = {
+    width: "100%",
+    padding: "14px 16px",
+    border: "1.5px solid #d1dbd1",
+    borderRadius: "10px",
+    fontSize: "15px",
+    color: "#0a1628",
+    background: "#fff",
+    outline: "none",
+    boxSizing: "border-box",
+  };
+
   return (
-    <div className="min-h-screen bg-green-50 flex flex-col md:flex-row">
-      {/* Left Side — Branding */}
-      <div className="hidden md:flex md:w-1/2 bg-green-800 flex-col justify-center items-center p-12 text-white">
-        <h1 className="text-4xl font-bold mb-4">CAC Filing</h1>
-        <p className="text-green-200 text-center text-lg">
-          Join thousands of Nigerian business owners staying compliant with
-          ease.
-        </p>
-        <div className="mt-12 space-y-6">
-          {[
-            { icon: "✅", text: "Easy step-by-step filing wizard" },
-            { icon: "🔔", text: "Deadline reminders via SMS & Email" },
-            { icon: "⚡", text: "1 hour response guarantee" },
-            { icon: "📄", text: "CAC compliant document generation" },
-          ].map((item, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <span className="text-xl">{item.icon}</span>
-              <span className="text-green-100">{item.text}</span>
-            </div>
-          ))}
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        fontFamily: "-apple-system, 'Inter', sans-serif",
+      }}
+    >
+      {/* Left Panel — Dark Branding */}
+      <div
+        style={{
+          width: "420px",
+          background: "#0a1628",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "40px",
+          flexShrink: 0,
+        }}
+      >
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              background: "#0f5c2e",
+              borderRadius: "9px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span
+              style={{ color: "#fff", fontSize: "14px", fontWeight: "800" }}
+            >
+              CF
+            </span>
+          </div>
+          <span
+            style={{
+              fontSize: "18px",
+              fontWeight: "800",
+              color: "#fff",
+              letterSpacing: "-0.3px",
+            }}
+          >
+            CAC<span style={{ color: "#4ade80" }}>Filing</span>
+          </span>
         </div>
+
+        {/* Main Content */}
+        <div>
+          <div
+            style={{
+              display: "inline-block",
+              padding: "6px 14px",
+              borderRadius: "6px",
+              background: "rgba(74,222,128,0.15)",
+              color: "#4ade80",
+              fontSize: "13px",
+              fontWeight: "700",
+              letterSpacing: "0.8px",
+              textTransform: "uppercase",
+              marginBottom: "20px",
+            }}
+          >
+            Get Started Free
+          </div>
+          <h1
+            style={{
+              fontSize: "36px",
+              fontWeight: "900",
+              color: "#fff",
+              letterSpacing: "-1px",
+              lineHeight: "1.1",
+              marginBottom: "16px",
+            }}
+          >
+            Join thousands of
+            <br />
+            compliant businesses
+          </h1>
+          <p
+            style={{
+              fontSize: "16px",
+              color: "#64748b",
+              lineHeight: "1.65",
+              marginBottom: "40px",
+            }}
+          >
+            CAC Filing makes it easy to stay compliant. Our legal team handles
+            everything — you just answer a few simple questions.
+          </p>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
+            {[
+              { icon: "✅", text: "Easy step-by-step filing wizard" },
+              { icon: "⚡", text: "1-hour response guarantee" },
+              { icon: "🔔", text: "Deadline reminders via SMS & Email" },
+              { icon: "📄", text: "Expert document preparation" },
+            ].map((item, i) => (
+              <div
+                key={i}
+                style={{ display: "flex", alignItems: "center", gap: "12px" }}
+              >
+                <div
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    background: "rgba(255,255,255,0.06)",
+                    borderRadius: "8px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "18px",
+                    flexShrink: 0,
+                  }}
+                >
+                  {item.icon}
+                </div>
+                <span
+                  style={{
+                    fontSize: "15px",
+                    color: "#94a3b8",
+                    fontWeight: "500",
+                  }}
+                >
+                  {item.text}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <p style={{ fontSize: "13px", color: "#334155" }}>
+          © 2024 CACFiling · Helping Nigerian businesses stay compliant
+        </p>
       </div>
 
-      {/* Right Side — Form */}
-      <div className="flex-1 flex flex-col justify-center px-6 py-12 md:px-12">
-        <div className="md:hidden text-center mb-8">
-          <h1 className="text-3xl font-bold text-green-800">CAC Filing</h1>
-          <p className="text-gray-500 mt-1">Create your account</p>
-        </div>
-
-        <div className="max-w-md w-full mx-auto">
-          <h2 className="text-2xl font-bold text-green-900 mb-2">
-            Create Account
+      {/* Right Panel — Form */}
+      <div
+        style={{
+          flex: 1,
+          background: "#f8faf8",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "40px",
+          overflowY: "auto",
+        }}
+      >
+        <div style={{ width: "100%", maxWidth: "420px" }}>
+          <h2
+            style={{
+              fontSize: "28px",
+              fontWeight: "900",
+              color: "#0a1628",
+              letterSpacing: "-0.8px",
+              marginBottom: "6px",
+            }}
+          >
+            Create your account
           </h2>
-          <p className="text-gray-500 mb-8">
+          <p
+            style={{ fontSize: "16px", color: "#64748b", marginBottom: "32px" }}
+          >
             Already have an account?{" "}
             <span
               onClick={() => navigate("/login")}
-              className="text-green-700 font-medium cursor-pointer hover:underline"
+              style={{ color: "#0f5c2e", fontWeight: "700", cursor: "pointer" }}
             >
               Login here
             </span>
           </p>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            <div
+              style={{
+                marginBottom: "20px",
+                padding: "14px 16px",
+                background: "#fef2f2",
+                border: "1px solid #fecaca",
+                borderRadius: "10px",
+                fontSize: "14px",
+                color: "#dc2626",
+                fontWeight: "500",
+              }}
+            >
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "#0a1628",
+                  marginBottom: "8px",
+                }}
+              >
                 Full Name
               </label>
               <input
@@ -113,12 +275,22 @@ function Register() {
                 onChange={handleChange}
                 placeholder="John Doe"
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700"
+                style={inputStyle}
+                onFocus={(e) => (e.target.style.borderColor = "#0f5c2e")}
+                onBlur={(e) => (e.target.style.borderColor = "#d1dbd1")}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "#0a1628",
+                  marginBottom: "8px",
+                }}
+              >
                 Email Address
               </label>
               <input
@@ -128,12 +300,22 @@ function Register() {
                 onChange={handleChange}
                 placeholder="john@example.com"
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700"
+                style={inputStyle}
+                onFocus={(e) => (e.target.style.borderColor = "#0f5c2e")}
+                onBlur={(e) => (e.target.style.borderColor = "#d1dbd1")}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "#0a1628",
+                  marginBottom: "8px",
+                }}
+              >
                 Phone Number
               </label>
               <input
@@ -142,12 +324,22 @@ function Register() {
                 value={formData.phoneNumber}
                 onChange={handleChange}
                 placeholder="08012345678"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700"
+                style={inputStyle}
+                onFocus={(e) => (e.target.style.borderColor = "#0f5c2e")}
+                onBlur={(e) => (e.target.style.borderColor = "#d1dbd1")}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "#0a1628",
+                  marginBottom: "8px",
+                }}
+              >
                 Password
               </label>
               <input
@@ -157,12 +349,22 @@ function Register() {
                 onChange={handleChange}
                 placeholder="Min. 6 characters"
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700"
+                style={inputStyle}
+                onFocus={(e) => (e.target.style.borderColor = "#0f5c2e")}
+                onBlur={(e) => (e.target.style.borderColor = "#d1dbd1")}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "#0a1628",
+                  marginBottom: "8px",
+                }}
+              >
                 Confirm Password
               </label>
               <input
@@ -172,21 +374,53 @@ function Register() {
                 onChange={handleChange}
                 placeholder="Repeat your password"
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700"
+                style={inputStyle}
+                onFocus={(e) => (e.target.style.borderColor = "#0f5c2e")}
+                onBlur={(e) => (e.target.style.borderColor = "#d1dbd1")}
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-green-800 text-white font-semibold rounded-xl hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              style={{
+                width: "100%",
+                padding: "15px",
+                background: loading ? "#64748b" : "#0f5c2e",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px",
+                fontSize: "16px",
+                fontWeight: "700",
+                cursor: loading ? "not-allowed" : "pointer",
+                marginTop: "8px",
+                letterSpacing: "-0.2px",
+              }}
             >
               {loading ? "Creating Account..." : "Create Account →"}
             </button>
           </form>
 
-          <p className="mt-6 text-xs text-center text-gray-400">
-            By registering, you agree to our Terms of Service and Privacy Policy
+          <p
+            style={{
+              marginTop: "24px",
+              fontSize: "13px",
+              textAlign: "center",
+              color: "#94a3b8",
+            }}
+          >
+            By registering, you agree to our{" "}
+            <span
+              style={{ color: "#0f5c2e", cursor: "pointer", fontWeight: "600" }}
+            >
+              Terms of Service
+            </span>{" "}
+            and{" "}
+            <span
+              style={{ color: "#0f5c2e", cursor: "pointer", fontWeight: "600" }}
+            >
+              Privacy Policy
+            </span>
           </p>
         </div>
       </div>
