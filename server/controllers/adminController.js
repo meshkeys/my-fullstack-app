@@ -1,4 +1,5 @@
 const prisma = require("../prisma/client");
+const bcrypt = require("bcryptjs");
 const { sendDocumentRequestEmail } = require("../utils/emailService");
 
 // @desc    Get all filings
