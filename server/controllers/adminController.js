@@ -1,6 +1,9 @@
 const prisma = require("../prisma/client");
 const bcrypt = require("bcryptjs");
-const { sendDocumentRequestEmail } = require("../utils/emailService");
+const {
+  sendEmail,
+  sendDocumentRequestEmail,
+} = require("../utils/emailService");
 
 // @desc    Get all filings
 // @route   GET /api/admin/filings
@@ -451,17 +454,66 @@ const createAgent = async (req, res) => {
   }
 };
 
-// @desc    Update agent status
+/// @desc    Update agent details
 // @route   PUT /api/admin/agents/:id
 const updateAgent = async (req, res) => {
   try {
-    const { isActive } = req.body;
+    const { isActive, fullName, email, phoneNumber, password } = req.body;
+
+    const updateData = {};
+    if (isActive !== undefined) updateData.isActive = isActive;
+    if (fullName) updateData.fullName = fullName;
+    if (email) updateData.email = email;
+    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(password, salt);
+    }
+
     const agent = await prisma.user.update({
       where: { id: req.params.id },
-      data: { isActive },
+      data: updateData,
     });
+
     res.status(200).json({ success: true, message: "Agent updated!", agent });
   } catch (error) {
+    console.error("Update agent error:", error.message);
+    res.status(500).json({ success: false, message: "Something went wrong." });
+  }
+};
+
+// @desc    Delete agent
+// @route   DELETE /api/admin/agents/:id
+const deleteAgent = async (req, res) => {
+  try {
+    // Check if agent has active filings
+    const activeFilings = await prisma.filing.count({
+      where: {
+        agentId: req.params.id,
+        status: { notIn: ["COMPLETED", "REJECTED"] },
+      },
+    });
+
+    if (activeFilings > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot delete agent with ${activeFilings} active filing(s). Reassign or complete them first.`,
+      });
+    }
+
+    // Unassign completed filings
+    await prisma.filing.updateMany({
+      where: { agentId: req.params.id },
+      data: { agentId: null },
+    });
+
+    await prisma.user.delete({ where: { id: req.params.id } });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Agent deleted successfully!" });
+  } catch (error) {
+    console.error("Delete agent error:", error.message);
     res.status(500).json({ success: false, message: "Something went wrong." });
   }
 };
@@ -752,6 +804,7 @@ module.exports = {
   getAgents,
   createAgent,
   updateAgent,
+  deleteAgent,
   assignFiling,
   autoAssignFilings,
   getSLAConfigs,
