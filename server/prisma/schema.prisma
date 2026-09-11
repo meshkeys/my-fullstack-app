@@ -16,9 +16,12 @@ model User {
   resetToken        String?
   resetTokenExpiry  DateTime?
   isAdmin           Boolean    @default(false)
+  isAgent           Boolean    @default(false)
+  isActive          Boolean    @default(true)
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
   businesses        Business[]
+  assignedFilings   Filing[]   @relation("AgentFilings")
 }
 
 model Business {
@@ -66,19 +69,23 @@ model Trustee {
 }
 
 model Filing {
-  id          String        @id @default(uuid())
-  filingType  FilingType
-  status      FilingStatus  @default(PENDING)
-  dueDate     DateTime
-  submittedAt DateTime?
-  completedAt DateTime?
-  amount      Float?
-  formData    Json?
-  businessId  String
-  business    Business      @relation(fields: [businessId], references: [id])
-  messages    FilingMessage[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id            String        @id @default(uuid())
+  filingType    FilingType
+  status        FilingStatus  @default(PENDING)
+  dueDate       DateTime
+  submittedAt   DateTime?
+  completedAt   DateTime?
+  amount        Float?
+  formData      Json?
+  slaDeadline   DateTime?
+  slaStatus     SLAStatus     @default(ON_TRACK)
+  agentId       String?
+  agent         User?         @relation("AgentFilings", fields: [agentId], references: [id])
+  businessId    String
+  business      Business      @relation(fields: [businessId], references: [id])
+  messages      FilingMessage[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 model FilingMessage {
@@ -89,10 +96,44 @@ model FilingMessage {
   message         String
   isRead          Boolean       @default(false)
   requiresAction  Boolean       @default(false)
-  actionType      String?       // "UPLOAD_DOCUMENT" | "PROVIDE_INFO"
-  requestedDocs   Json?         // list of documents requested by agent
-  attachments     Json?         // uploaded file URLs from client
+  actionType      String?
+  requestedDocs   Json?
+  attachments     Json?
   createdAt       DateTime      @default(now())
+}
+
+model FilingPrice {
+  id          String     @id @default(uuid())
+  filingType  FilingType @unique
+  serviceFee  Float
+  govtFee     Float      @default(3000)
+  isActive    Boolean    @default(true)
+  updatedBy   String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model SLAConfig {
+  id              String     @id @default(uuid())
+  filingType      FilingType @unique
+  responseTimeHrs Int        @default(1)
+  displayText     String     @default("1 hour")
+  warningAtHrs    Int        @default(1)
+  escalateAtHrs   Int        @default(2)
+  isActive        Boolean    @default(true)
+  updatedBy       String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model AppSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Reminder {
@@ -139,13 +180,8 @@ enum MessageSender {
   AGENT
 }
 
-model FilingPrice {
-  id          String   @id @default(uuid())
-  filingType  FilingType @unique
-  serviceFee  Float
-  govtFee     Float    @default(3000)
-  isActive    Boolean  @default(true)
-  updatedBy   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+enum SLAStatus {
+  ON_TRACK
+  AT_RISK
+  BREACHED
 }
