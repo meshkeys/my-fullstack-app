@@ -104,6 +104,18 @@ function AdminDashboard() {
         </div>
         <div className="flex items-center gap-3">
           <button
+            onClick={() => navigate("/admin/agents")}
+            className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition"
+          >
+            👥 Agents
+          </button>
+          <button
+            onClick={() => navigate("/admin/sla")}
+            className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition"
+          >
+            ⏱️ SLA
+          </button>
+          <button
             onClick={() => navigate("/admin/pricing")}
             className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition"
           >

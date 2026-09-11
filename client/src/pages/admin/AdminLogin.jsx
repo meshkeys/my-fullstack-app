@@ -18,13 +18,19 @@ function AdminLogin() {
         formData,
       );
 
-      if (!response.data.user.isAdmin) {
-        return setError("Access denied. Admin accounts only.");
+      if (!response.data.user.isAdmin && !response.data.user.isAgent) {
+        return setError("Access denied. Staff accounts only.");
       }
 
       localStorage.setItem("adminToken", response.data.token);
       localStorage.setItem("adminUser", JSON.stringify(response.data.user));
-      navigate("/admin/dashboard");
+
+      // Route based on role
+      if (response.data.user.isAdmin) {
+        navigate("/admin/dashboard");
+      } else if (response.data.user.isAgent) {
+        navigate("/agent/dashboard");
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid credentials");
     } finally {
