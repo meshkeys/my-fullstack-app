@@ -13,6 +13,10 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminFilingDetail from "./pages/admin/AdminFilingDetail";
 import AdminPricing from "./pages/admin/AdminPricing";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminAgents from "./pages/admin/AdminAgents";
+import AdminSLA from "./pages/admin/AdminSLA";
+import AgentPerformance from "./pages/admin/AgentPerformance";
+import AgentDashboard from "./pages/agent/AgentDashboard";
 
 // Inside Routes:
 <Route path="/admin/pricing" element={<AdminPricing />} />;
@@ -27,6 +31,13 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/admin/agents" element={<AdminAgents />} />
+        <Route path="/admin/sla" element={<AdminSLA />} />
+        <Route
+          path="/admin/agent/:id/performance"
+          element={<AgentPerformance />}
+        />
+        <Route path="/agent/dashboard" element={<AgentDashboard />} />
 
         {/* Protected client routes */}
         <Route
