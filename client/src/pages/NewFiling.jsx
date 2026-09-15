@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../utils/api";
@@ -593,16 +592,19 @@ function NewFiling() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [typesRes, businessRes] = await Promise.all([
+        const [typesRes, businessRes, profileRes] = await Promise.all([
           api.get("/api/filings/types"),
           api.get("/api/business"),
+          api.get("/api/auth/me"),
         ]);
         setFilingTypes(typesRes.data.filingTypes);
         setBusinesses(businessRes.data.businesses);
+        setUserProfile(profileRes.data.user);
 
         if (preSelectedType) {
           const found = typesRes.data.filingTypes.find(
@@ -619,6 +621,29 @@ function NewFiling() {
     };
     fetchData();
   }, [preSelectedType]);
+
+  // Auto-populate form when business is selected
+  const handleBusinessSelect = (business) => {
+    setSelectedBusiness(business);
+
+    // Pre-fill common fields from business
+    const autoFilled = {
+      // Business fields
+      registeredAddress: business.address || "",
+      currentAddress: business.address || "",
+      currentName: business.businessName || "",
+      natureOfBusiness: business.natureOfBusiness || "",
+      // Director fields from business directors
+      director1Name: business.directors?.[0]?.fullName || "",
+      director1Address: business.directors?.[0]?.address || "",
+      director1Nationality: business.directors?.[0]?.nationality || "Nigerian",
+      director2Name: business.directors?.[1]?.fullName || "",
+      director2Address: business.directors?.[1]?.address || "",
+      director2Nationality: business.directors?.[1]?.nationality || "Nigerian",
+    };
+
+    setFormData((prev) => ({ ...autoFilled, ...prev }));
+  };
 
   const handleFieldChange = (e) => {
     const { name, value, type } = e.target;
@@ -948,7 +973,7 @@ function NewFiling() {
                 businesses.map((business) => (
                   <button
                     key={business.id}
-                    onClick={() => setSelectedBusiness(business)}
+                    onClick={() => handleBusinessSelect(business)}
                     className={`w-full p-4 rounded-xl border-2 text-left transition ${
                       selectedBusiness?.id === business.id
                         ? "border-green-700 bg-green-50"

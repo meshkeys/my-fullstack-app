@@ -17,6 +17,7 @@ import AdminAgents from "./pages/admin/AdminAgents";
 import AdminSLA from "./pages/admin/AdminSLA";
 import AgentPerformance from "./pages/admin/AgentPerformance";
 import AgentDashboard from "./pages/agent/AgentDashboard";
+import DocumentEditor from "./pages/agent/DocumentEditor";
 
 // Inside Routes:
 <Route path="/admin/pricing" element={<AdminPricing />} />;
@@ -78,6 +79,10 @@ function App() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/filing/:id" element={<AdminFilingDetail />} />
         <Route path="/admin/pricing" element={<AdminPricing />} />
+        <Route
+          path="/admin/filing/:filingId/document/:templateId"
+          element={<DocumentEditor />}
+        />
       </Routes>
     </Router>
   );

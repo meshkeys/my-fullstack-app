@@ -128,6 +128,7 @@ const getMyBusinesses = async (req, res) => {
       where: { userId: req.user.id },
       include: {
         filings: true,
+        directors: true,
       },
     });
 

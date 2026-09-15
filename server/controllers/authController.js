@@ -234,5 +234,23 @@ const resetPassword = async (req, res) => {
     });
   }
 };
+// @desc    Get user profile
+// @route   GET /api/auth/profile
+const getProfile = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phoneNumber: true,
+      },
+    });
+    res.status(200).json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Something went wrong." });
+  }
+};
 
 module.exports = { register, login, forgotPassword, resetPassword };

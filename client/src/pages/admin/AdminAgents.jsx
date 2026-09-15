@@ -24,14 +24,6 @@ function AdminAgents() {
   const headers = { Authorization: `Bearer ${token}` };
   const baseUrl = import.meta.env.VITE_API_URL;
 
-  useEffect(() => {
-    if (!token) {
-      navigate("/admin");
-      return;
-    }
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     try {
       const [agentsRes, settingsRes] = await Promise.all([
@@ -46,6 +38,14 @@ function AdminAgents() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/admin");
+      return;
+    }
+    fetchData();
+  }, []);
 
   const getSetting = (key) => settings.find((s) => s.key === key)?.value;
 

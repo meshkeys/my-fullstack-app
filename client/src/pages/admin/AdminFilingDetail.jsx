@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { printFilingAsPDF } from "../../utils/printFiling";
+import { DOCUMENT_TEMPLATES } from "../../utils/documentTemplates";
 
 function AdminFilingDetail() {
   const { id } = useParams();
@@ -184,9 +186,29 @@ function AdminFilingDetail() {
           <div className="md:col-span-2 space-y-6">
             {/* Client & Filing Info */}
             <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h2 className="font-bold text-gray-800 text-lg mb-4">
-                {formatFilingType(filing.filingType)}
-              </h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="font-bold text-gray-800 text-lg">
+                  {formatFilingType(filing.filingType)}
+                </h2>
+                <button
+                  onClick={() => printFilingAsPDF(filing)}
+                  style={{
+                    padding: "8px 16px",
+                    background: "#1e40af",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  🖨️ Print / Save PDF
+                </button>
+              </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-gray-400 text-xs uppercase mb-1">Client</p>
@@ -593,6 +615,110 @@ function AdminFilingDetail() {
                 >
                   ❌ Reject Filing
                 </button>
+              </div>
+            </div>
+
+            {/* Document Templates */}
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: "12px",
+                padding: "16px",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "15px",
+                  fontWeight: "800",
+                  color: "#0a1628",
+                  marginBottom: "4px",
+                }}
+              >
+                📄 Document Templates
+              </h3>
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "#64748b",
+                  marginBottom: "14px",
+                }}
+              >
+                Click to prepare pre-filled documents
+              </p>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+              >
+                {(DOCUMENT_TEMPLATES[filing.filingType] || []).map(
+                  (template) => (
+                    <button
+                      key={template.id}
+                      onClick={() =>
+                        navigate(
+                          `/admin/filing/${filing.id}/document/${template.id}`,
+                        )
+                      }
+                      style={{
+                        padding: "12px",
+                        background: "#f8faf8",
+                        border: "1px solid #e8ede8",
+                        borderRadius: "10px",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#e8f5ee";
+                        e.currentTarget.style.borderColor = "#0f5c2e";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "#f8faf8";
+                        e.currentTarget.style.borderColor = "#e8ede8";
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                        }}
+                      >
+                        <span style={{ fontSize: "20px" }}>
+                          {template.icon}
+                        </span>
+                        <div>
+                          <p
+                            style={{
+                              fontSize: "13px",
+                              fontWeight: "700",
+                              color: "#0a1628",
+                            }}
+                          >
+                            {template.name}
+                          </p>
+                          <p
+                            style={{
+                              fontSize: "11px",
+                              color: "#64748b",
+                              marginTop: "2px",
+                            }}
+                          >
+                            {template.description}
+                          </p>
+                        </div>
+                        <span
+                          style={{
+                            marginLeft: "auto",
+                            fontSize: "16px",
+                            color: "#0f5c2e",
+                          }}
+                        >
+                          →
+                        </span>
+                      </div>
+                    </button>
+                  ),
+                )}
               </div>
             </div>
           </div>
