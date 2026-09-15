@@ -32,7 +32,21 @@ app.use("/api/agent", agentRoutes);
 app.get("/", (req, res) => {
   res.json({ message: "CAC Filing API is running! 🚀" });
 });
-
+// TEMP: Admin setup endpoint - remove after use
+app.get("/setup-admin", async (req, res) => {
+  try {
+    const { PrismaClient } = require("@prisma/client");
+    const prisma = new PrismaClient();
+    const result = await prisma.user.updateMany({
+      where: { email: "meshkeys@gmail.com" },
+      data: { isAdmin: true },
+    });
+    await prisma.$disconnect();
+    res.json({ success: true, result });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
