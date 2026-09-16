@@ -792,6 +792,105 @@ const getAgentPerformance = async (req, res) => {
   }
 };
 
+// @desc    Update agent assignment settings
+// @route   PUT /api/admin/agents/:id/assignment
+const updateAgentAssignment = async (req, res) => {
+  try {
+    const { autoAssignEnabled, assignedTypes, maxFilings } = req.body;
+
+    const agent = await prisma.user.update({
+      where: { id: req.params.id },
+      data: {
+        autoAssignEnabled,
+        assignedTypes: assignedTypes || [],
+        maxFilings: maxFilings || 20,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Agent assignment settings updated!",
+      agent,
+    });
+  } catch (error) {
+    console.error("Update agent assignment error:", error.message);
+    res.status(500).json({ success: false, message: "Something went wrong." });
+  }
+};
+
+// @desc    Bulk assign selected filings
+// @route   POST /api/admin/filings/bulk-assign
+const bulkAssignFilings = async (req, res) => {
+  try {
+    const { filingIds, agentId } = req.body;
+
+    if (!filingIds || filingIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No filings selected",
+      });
+    }
+
+    const agent = await prisma.user.findFirst({
+      where: { id: agentId, isAgent: true },
+    });
+
+    if (!agent) {
+      return res.status(404).json({
+        success: false,
+        message: "Agent not found",
+      });
+    }
+
+    let assigned = 0;
+    for (const filingId of filingIds) {
+      const filing = await prisma.filing.findUnique({
+        where: { id: filingId },
+      });
+
+      if (!filing) continue;
+
+      const slaConfig = await prisma.sLAConfig.findFirst({
+        where: { filingType: filing.filingType },
+      });
+
+      const slaDeadline = new Date();
+      slaDeadline.setHours(
+        slaDeadline.getHours() + (slaConfig?.responseTimeHrs || 24),
+      );
+
+      await prisma.filing.update({
+        where: { id: filingId },
+        data: {
+          agentId,
+          status: "IN_REVIEW",
+          slaDeadline,
+          slaStatus: "ON_TRACK",
+        },
+      });
+
+      await prisma.filingMessage.create({
+        data: {
+          filingId,
+          sender: "AGENT",
+          message: `Filing assigned to ${agent.fullName} and is now under review.`,
+        },
+      });
+
+      assigned++;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `${assigned} filing(s) assigned to ${agent.fullName}!`,
+      assigned,
+    });
+  } catch (error) {
+    console.error("Bulk assign error:", error.message);
+    res.status(500).json({ success: false, message: "Something went wrong." });
+  }
+};
+
 module.exports = {
   getAllFilings,
   getFilingDetail,
@@ -812,4 +911,6 @@ module.exports = {
   getSettings,
   updateSetting,
   getAgentPerformance,
+  updateAgentAssignment,
+  bulkAssignFilings,
 };

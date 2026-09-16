@@ -20,6 +20,8 @@ const {
   updateSetting,
   getAgentPerformance,
   deleteAgent,
+  updateAgentAssignment,
+  bulkAssignFilings,
 } = require("../controllers/adminController");
 const { protect } = require("../middleware/authMiddleware");
 const { adminOnly } = require("../middleware/adminMiddleware");
@@ -46,5 +48,7 @@ router.put("/sla/:filingType", updateSLAConfig);
 router.get("/settings", getSettings);
 router.put("/settings/:key", updateSetting);
 router.delete("/agents/:id", deleteAgent);
+router.put("/agents/:id/assignment", updateAgentAssignment);
+router.post("/filings/bulk-assign", bulkAssignFilings);
 
 module.exports = router;
