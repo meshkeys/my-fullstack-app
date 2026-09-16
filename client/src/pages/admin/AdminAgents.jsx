@@ -15,19 +15,9 @@ const FILING_TYPES = [
   { value: "AUDITED_ACCOUNTS", label: "Audited Accounts", icon: "📊" },
 ];
 
-const FREQUENCY_OPTIONS = [
-  { value: "immediate", label: "Immediately (as they come in)" },
-  { value: "hourly", label: "Every Hour" },
-  { value: "every_6_hours", label: "Every 6 Hours" },
-  { value: "twice_daily", label: "Twice Daily (9am & 3pm)" },
-  { value: "daily_morning", label: "Daily at 9:00 AM" },
-  { value: "daily_evening", label: "Daily at 5:00 PM" },
-];
-
 function AdminAgents() {
   const navigate = useNavigate();
   const [agents, setAgents] = useState([]);
-  const [settings, setSettings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingAgent, setEditingAgent] = useState(null);
@@ -47,6 +37,19 @@ function AdminAgents() {
   const headers = { Authorization: `Bearer ${token}` };
   const baseUrl = import.meta.env.VITE_API_URL;
 
+  const fetchData = async () => {
+    try {
+      const agentsRes = await axios.get(`${baseUrl}/api/admin/agents`, {
+        headers,
+      });
+      setAgents(agentsRes.data.agents);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!token) {
       navigate("/admin");
@@ -55,50 +58,20 @@ function AdminAgents() {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
-    try {
-      const [agentsRes, settingsRes] = await Promise.all([
-        axios.get(`${baseUrl}/api/admin/agents`, { headers }),
-        axios.get(`${baseUrl}/api/admin/settings`, { headers }),
-      ]);
-      setAgents(agentsRes.data.agents);
-      setSettings(settingsRes.data.settings);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getSetting = (key) => settings.find((s) => s.key === key)?.value;
-
-  const handleSaveSetting = async (key, value) => {
-    try {
-      await axios.put(
-        `${baseUrl}/api/admin/settings/${key}`,
-        { value },
-        { headers },
-      );
-      fetchData();
-      setSuccessMsg("Setting updated!");
-      setTimeout(() => setSuccessMsg(""), 3000);
-    } catch (error) {
-      console.error("Error updating setting:", error);
-    }
-  };
-
   const handleToggleAgentAutoAssign = async (agent) => {
+    const newValue = !agent.autoAssignEnabled;
     try {
       await axios.put(
         `${baseUrl}/api/admin/agents/${agent.id}/assignment`,
         {
-          autoAssignEnabled: !agent.autoAssignEnabled,
+          autoAssignEnabled: newValue,
           assignedTypes: agent.assignedTypes || [],
           maxFilings: agent.maxFilings || 20,
         },
         { headers },
       );
-      if (!agent.autoAssignEnabled) {
+      // Always expand when enabling
+      if (newValue) {
         setExpandedAgent(agent.id);
       } else {
         setExpandedAgent(null);
@@ -255,11 +228,6 @@ function AdminAgents() {
     boxSizing: "border-box",
   };
 
-  const autoAssignEnabled = getSetting("auto_assign_enabled") === "true";
-  const autoAssignMethod = getSetting("auto_assign_method") || "round_robin";
-  const maxFilingsGlobal = getSetting("max_filings_per_agent") || "20";
-  const assignFrequency = getSetting("assign_frequency") || "immediate";
-
   return (
     <div
       style={{
@@ -333,285 +301,6 @@ function AdminAgents() {
           </div>
         )}
 
-        {/* Global Assignment Settings */}
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: "14px",
-            border: "1px solid #e8ede8",
-            padding: "22px",
-            marginBottom: "20px",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: "16px",
-              fontWeight: "800",
-              color: "#0a1628",
-              marginBottom: "16px",
-            }}
-          >
-            ⚙️ Global Assignment Settings
-          </h2>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: "16px",
-            }}
-          >
-            {/* Auto Assign Toggle */}
-            <div
-              style={{
-                padding: "16px",
-                background: "#f8faf8",
-                borderRadius: "10px",
-                border: "1px solid #e8ede8",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  color: "#64748b",
-                  marginBottom: "8px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                Auto-Assignment
-              </p>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "6px",
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: "15px",
-                    fontWeight: "700",
-                    color: "#0a1628",
-                  }}
-                >
-                  {autoAssignEnabled ? "🟢 On" : "🔴 Off"}
-                </p>
-                <button
-                  onClick={() =>
-                    handleSaveSetting(
-                      "auto_assign_enabled",
-                      autoAssignEnabled ? "false" : "true",
-                    )
-                  }
-                  style={{
-                    padding: "5px 12px",
-                    background: autoAssignEnabled ? "#fef2f2" : "#e8f5ee",
-                    color: autoAssignEnabled ? "#dc2626" : "#0f5c2e",
-                    border: "none",
-                    borderRadius: "7px",
-                    fontSize: "12px",
-                    fontWeight: "700",
-                    cursor: "pointer",
-                  }}
-                >
-                  {autoAssignEnabled ? "Disable" : "Enable"}
-                </button>
-              </div>
-              <p style={{ fontSize: "11px", color: "#94a3b8" }}>
-                Global auto-assignment switch
-              </p>
-            </div>
-
-            {/* Method */}
-            <div
-              style={{
-                padding: "16px",
-                background: "#f8faf8",
-                borderRadius: "10px",
-                border: "1px solid #e8ede8",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  color: "#64748b",
-                  marginBottom: "8px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                Method
-              </p>
-              <select
-                value={autoAssignMethod}
-                onChange={(e) =>
-                  handleSaveSetting("auto_assign_method", e.target.value)
-                }
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  border: "1.5px solid #d1dbd1",
-                  borderRadius: "7px",
-                  fontSize: "13px",
-                  color: "#0a1628",
-                  background: "#fff",
-                  outline: "none",
-                }}
-              >
-                <option value="round_robin">🔄 Round Robin</option>
-                <option value="least_loaded">⚖️ Least Loaded</option>
-              </select>
-              <p
-                style={{ fontSize: "11px", color: "#94a3b8", marginTop: "6px" }}
-              >
-                {autoAssignMethod === "round_robin"
-                  ? "Even distribution"
-                  : "Assign to least busy"}
-              </p>
-            </div>
-
-            {/* Frequency */}
-            <div
-              style={{
-                padding: "16px",
-                background: "#f8faf8",
-                borderRadius: "10px",
-                border: "1px solid #e8ede8",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  color: "#64748b",
-                  marginBottom: "8px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                Frequency
-              </p>
-              <select
-                value={assignFrequency}
-                onChange={(e) =>
-                  handleSaveSetting("assign_frequency", e.target.value)
-                }
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  border: "1.5px solid #d1dbd1",
-                  borderRadius: "7px",
-                  fontSize: "13px",
-                  color: "#0a1628",
-                  background: "#fff",
-                  outline: "none",
-                }}
-              >
-                {FREQUENCY_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              <p
-                style={{ fontSize: "11px", color: "#94a3b8", marginTop: "6px" }}
-              >
-                When to distribute tickets
-              </p>
-            </div>
-
-            {/* Max Filings */}
-            <div
-              style={{
-                padding: "16px",
-                background: "#f8faf8",
-                borderRadius: "10px",
-                border: "1px solid #e8ede8",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  color: "#64748b",
-                  marginBottom: "8px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                Max Per Agent
-              </p>
-              <input
-                type="number"
-                defaultValue={maxFilingsGlobal}
-                onBlur={(e) =>
-                  handleSaveSetting("max_filings_per_agent", e.target.value)
-                }
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  border: "1.5px solid #d1dbd1",
-                  borderRadius: "7px",
-                  fontSize: "14px",
-                  color: "#0a1628",
-                  background: "#fff",
-                  outline: "none",
-                  boxSizing: "border-box",
-                }}
-              />
-              <p
-                style={{ fontSize: "11px", color: "#94a3b8", marginTop: "6px" }}
-              >
-                Max active filings per agent
-              </p>
-            </div>
-          </div>
-
-          <div
-            style={{
-              marginTop: "16px",
-              paddingTop: "16px",
-              borderTop: "1px solid #f1f5f1",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <p
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  color: "#0a1628",
-                }}
-              >
-                Manually trigger assignment now
-              </p>
-              <p style={{ fontSize: "13px", color: "#64748b" }}>
-                Assign all unassigned pending filings to available agents
-              </p>
-            </div>
-            <button
-              onClick={handleAutoAssignNow}
-              style={{
-                padding: "10px 20px",
-                background: "#1e40af",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: "14px",
-                fontWeight: "700",
-                cursor: "pointer",
-              }}
-            >
-              ⚡ Auto-Assign Now
-            </button>
-          </div>
-        </div>
-
         {/* Header */}
         <div
           style={{
@@ -639,31 +328,48 @@ function AdminAgents() {
               auto-assign on
             </p>
           </div>
-          <button
-            onClick={() => {
-              setShowForm(true);
-              setEditingAgent(null);
-              setFormData({
-                fullName: "",
-                email: "",
-                phoneNumber: "",
-                password: "",
-              });
-              setError("");
-            }}
-            style={{
-              padding: "10px 20px",
-              background: "#0f5c2e",
-              color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "14px",
-              fontWeight: "700",
-              cursor: "pointer",
-            }}
-          >
-            + Add Agent
-          </button>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              onClick={handleAutoAssignNow}
+              style={{
+                padding: "10px 18px",
+                background: "#1e40af",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "14px",
+                fontWeight: "700",
+                cursor: "pointer",
+              }}
+            >
+              ⚡ Auto-Assign Now
+            </button>
+            <button
+              onClick={() => {
+                setShowForm(true);
+                setEditingAgent(null);
+                setFormData({
+                  fullName: "",
+                  email: "",
+                  phoneNumber: "",
+                  password: "",
+                });
+                setError("");
+              }}
+              style={{
+                padding: "10px 20px",
+                background: "#0f5c2e",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "14px",
+                fontWeight: "700",
+                cursor: "pointer",
+              }}
+            >
+              + Add Agent
+            </button>
+          </div>
         </div>
 
         {/* Create Agent Form */}
@@ -1297,7 +1003,16 @@ function AdminAgents() {
                       Auto-assign tickets:
                     </span>
                     <button
-                      onClick={() => handleToggleAgentAutoAssign(agent)}
+                      onClick={() => {
+                        if (agent.autoAssignEnabled) {
+                          // Already enabled — just toggle expand
+                          setExpandedAgent(
+                            expandedAgent === agent.id ? null : agent.id,
+                          );
+                        } else {
+                          handleToggleAgentAutoAssign(agent);
+                        }
+                      }}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -1325,7 +1040,11 @@ function AdminAgents() {
                             : "#94a3b8",
                         }}
                       />
-                      {agent.autoAssignEnabled ? "Enabled" : "Disabled"}
+                      {agent.autoAssignEnabled
+                        ? expandedAgent === agent.id
+                          ? "Enabled ▲"
+                          : "Enabled ▼"
+                        : "Disabled"}
                     </button>
                     {agent.autoAssignEnabled && (
                       <span style={{ fontSize: "12px", color: "#0f5c2e" }}>
@@ -1404,145 +1123,139 @@ function AdminAgents() {
                 </div>
 
                 {/* Expanded Auto-assign Settings */}
-                {agent.autoAssignEnabled &&
-                  (expandedAgent === agent.id ||
-                    agent.assignedTypes?.length > 0) && (
+                {expandedAgent === agent.id && (
+                  <div
+                    style={{
+                      padding: "16px 20px",
+                      borderTop: "1px solid #f1f5f1",
+                      background: "#f0fdf4",
+                    }}
+                  >
                     <div
                       style={{
-                        padding: "16px 20px",
-                        borderTop: "1px solid #f1f5f1",
-                        background: "#f0fdf4",
+                        display: "grid",
+                        gridTemplateColumns: "1fr auto",
+                        gap: "16px",
+                        alignItems: "start",
                       }}
                     >
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr auto",
-                          gap: "16px",
-                          alignItems: "start",
-                        }}
-                      >
-                        <div>
-                          <p
-                            style={{
-                              fontSize: "13px",
-                              fontWeight: "700",
-                              color: "#0f5c2e",
-                              marginBottom: "10px",
-                            }}
-                          >
-                            📋 Select filing types for this agent:
-                          </p>
-                          <div
-                            style={{
-                              display: "grid",
-                              gridTemplateColumns: "repeat(3, 1fr)",
-                              gap: "8px",
-                            }}
-                          >
-                            {FILING_TYPES.map((type) => {
-                              const isSelected = (
-                                agent.assignedTypes || []
-                              ).includes(type.value);
-                              return (
-                                <label
-                                  key={type.value}
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                    padding: "8px 12px",
-                                    background: isSelected ? "#e8f5ee" : "#fff",
-                                    border: `1.5px solid ${isSelected ? "#0f5c2e" : "#e8ede8"}`,
-                                    borderRadius: "8px",
-                                    cursor: "pointer",
-                                    fontSize: "13px",
-                                    fontWeight: isSelected ? "600" : "400",
-                                    color: isSelected ? "#0f5c2e" : "#0a1628",
+                      <div>
+                        <p
+                          style={{
+                            fontSize: "13px",
+                            fontWeight: "700",
+                            color: "#0f5c2e",
+                            marginBottom: "10px",
+                          }}
+                        >
+                          📋 Select filing types for this agent:
+                        </p>
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(3, 1fr)",
+                            gap: "8px",
+                          }}
+                        >
+                          {FILING_TYPES.map((type) => {
+                            const isSelected = (
+                              agent.assignedTypes || []
+                            ).includes(type.value);
+                            return (
+                              <label
+                                key={type.value}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  padding: "8px 12px",
+                                  background: isSelected ? "#e8f5ee" : "#fff",
+                                  border: `1.5px solid ${isSelected ? "#0f5c2e" : "#e8ede8"}`,
+                                  borderRadius: "8px",
+                                  cursor: "pointer",
+                                  fontSize: "13px",
+                                  fontWeight: isSelected ? "600" : "400",
+                                  color: isSelected ? "#0f5c2e" : "#0a1628",
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => {
+                                    const current = agent.assignedTypes || [];
+                                    const updated = isSelected
+                                      ? current.filter((t) => t !== type.value)
+                                      : [...current, type.value];
+                                    handleUpdateAgentTypes(agent, updated);
                                   }}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={isSelected}
-                                    onChange={() => {
-                                      const current = agent.assignedTypes || [];
-                                      const updated = isSelected
-                                        ? current.filter(
-                                            (t) => t !== type.value,
-                                          )
-                                        : [...current, type.value];
-                                      handleUpdateAgentTypes(agent, updated);
-                                    }}
-                                    style={{ display: "none" }}
-                                  />
-                                  <span>{type.icon}</span>
-                                  <span>{type.label}</span>
-                                  {isSelected && (
-                                    <span style={{ marginLeft: "auto" }}>
-                                      ✓
-                                    </span>
-                                  )}
-                                </label>
-                              );
-                            })}
-                          </div>
-                          <p
-                            style={{
-                              fontSize: "12px",
-                              color: "#64748b",
-                              marginTop: "8px",
-                            }}
-                          >
-                            {(agent.assignedTypes || []).length === 0
-                              ? "⚠️ No types selected — agent will receive all types"
-                              : `✅ Agent will only receive selected filing types`}
-                          </p>
+                                  style={{ display: "none" }}
+                                />
+                                <span>{type.icon}</span>
+                                <span>{type.label}</span>
+                                {isSelected && (
+                                  <span style={{ marginLeft: "auto" }}>✓</span>
+                                )}
+                              </label>
+                            );
+                          })}
                         </div>
-                        <div style={{ minWidth: "140px" }}>
-                          <p
-                            style={{
-                              fontSize: "13px",
-                              fontWeight: "700",
-                              color: "#0f5c2e",
-                              marginBottom: "8px",
-                            }}
-                          >
-                            Max tickets:
-                          </p>
-                          <input
-                            type="number"
-                            defaultValue={agent.maxFilings || 20}
-                            min={1}
-                            max={50}
-                            onBlur={(e) =>
-                              handleUpdateMaxFilings(agent, e.target.value)
-                            }
-                            style={{
-                              width: "100%",
-                              padding: "8px 12px",
-                              border: "1.5px solid #86efac",
-                              borderRadius: "8px",
-                              fontSize: "14px",
-                              fontWeight: "600",
-                              color: "#0f5c2e",
-                              background: "#fff",
-                              outline: "none",
-                              boxSizing: "border-box",
-                            }}
-                          />
-                          <p
-                            style={{
-                              fontSize: "11px",
-                              color: "#64748b",
-                              marginTop: "4px",
-                            }}
-                          >
-                            Max active filings
-                          </p>
-                        </div>
+                        <p
+                          style={{
+                            fontSize: "12px",
+                            color: "#64748b",
+                            marginTop: "8px",
+                          }}
+                        >
+                          {(agent.assignedTypes || []).length === 0
+                            ? "⚠️ No types selected — agent will receive all types"
+                            : `✅ Agent will only receive selected filing types`}
+                        </p>
+                      </div>
+                      <div style={{ minWidth: "140px" }}>
+                        <p
+                          style={{
+                            fontSize: "13px",
+                            fontWeight: "700",
+                            color: "#0f5c2e",
+                            marginBottom: "8px",
+                          }}
+                        >
+                          Max tickets:
+                        </p>
+                        <input
+                          type="number"
+                          defaultValue={agent.maxFilings || 20}
+                          min={1}
+                          max={50}
+                          onBlur={(e) =>
+                            handleUpdateMaxFilings(agent, e.target.value)
+                          }
+                          style={{
+                            width: "100%",
+                            padding: "8px 12px",
+                            border: "1.5px solid #86efac",
+                            borderRadius: "8px",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            color: "#0f5c2e",
+                            background: "#fff",
+                            outline: "none",
+                            boxSizing: "border-box",
+                          }}
+                        />
+                        <p
+                          style={{
+                            fontSize: "11px",
+                            color: "#64748b",
+                            marginTop: "4px",
+                          }}
+                        >
+                          Max active filings
+                        </p>
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
