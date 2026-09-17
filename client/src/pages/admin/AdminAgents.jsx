@@ -60,6 +60,12 @@ function AdminAgents() {
 
   const handleToggleAgentAutoAssign = async (agent) => {
     const newValue = !agent.autoAssignEnabled;
+    // Optimistically update UI immediately
+    setAgents((prev) =>
+      prev.map((a) =>
+        a.id === agent.id ? { ...a, autoAssignEnabled: newValue } : a,
+      ),
+    );
     try {
       await axios.put(
         `${baseUrl}/api/admin/agents/${agent.id}/assignment`,
@@ -83,6 +89,10 @@ function AdminAgents() {
   };
 
   const handleUpdateAgentTypes = async (agent, types) => {
+    // Optimistically update UI
+    setAgents((prev) =>
+      prev.map((a) => (a.id === agent.id ? { ...a, assignedTypes: types } : a)),
+    );
     try {
       await axios.put(
         `${baseUrl}/api/admin/agents/${agent.id}/assignment`,
@@ -1003,16 +1013,7 @@ function AdminAgents() {
                       Auto-assign tickets:
                     </span>
                     <button
-                      onClick={() => {
-                        if (agent.autoAssignEnabled) {
-                          // Already enabled — just toggle expand
-                          setExpandedAgent(
-                            expandedAgent === agent.id ? null : agent.id,
-                          );
-                        } else {
-                          handleToggleAgentAutoAssign(agent);
-                        }
-                      }}
+                      onClick={() => handleToggleAgentAutoAssign(agent)}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -1040,11 +1041,7 @@ function AdminAgents() {
                             : "#94a3b8",
                         }}
                       />
-                      {agent.autoAssignEnabled
-                        ? expandedAgent === agent.id
-                          ? "Enabled ▲"
-                          : "Enabled ▼"
-                        : "Disabled"}
+                      {agent.autoAssignEnabled ? "✅ Enabled" : "⭕ Disabled"}
                     </button>
                     {agent.autoAssignEnabled && (
                       <span style={{ fontSize: "12px", color: "#0f5c2e" }}>
