@@ -21,7 +21,6 @@ function AdminAgents() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingAgent, setEditingAgent] = useState(null);
-  const [expandedAgent, setExpandedAgent] = useState(null);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -76,12 +75,6 @@ function AdminAgents() {
         },
         { headers },
       );
-      // Always expand when enabling
-      if (newValue) {
-        setExpandedAgent(agent.id);
-      } else {
-        setExpandedAgent(null);
-      }
       fetchData();
     } catch (error) {
       console.error("Error toggling auto assign:", error);
@@ -988,271 +981,346 @@ function AdminAgents() {
                 {/* Auto-assign Toggle Row */}
                 <div
                   style={{
-                    padding: "12px 20px",
+                    padding: "14px 20px",
                     background: "#f8faf8",
                     borderTop: "1px solid #f1f5f1",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
                   }}
                 >
+                  {/* Toggle Row */}
                   <div
                     style={{
                       display: "flex",
+                      justifyContent: "space-between",
                       alignItems: "center",
-                      gap: "12px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: "600",
-                        color: "#64748b",
-                      }}
-                    >
-                      Auto-assign tickets:
-                    </span>
-                    <button
-                      onClick={() => handleToggleAgentAutoAssign(agent)}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        padding: "6px 14px",
-                        background: agent.autoAssignEnabled
-                          ? "#e8f5ee"
-                          : "#f1f5f9",
-                        color: agent.autoAssignEnabled ? "#0f5c2e" : "#64748b",
-                        border: `1.5px solid ${agent.autoAssignEnabled ? "#86efac" : "#d1dbd1"}`,
-                        borderRadius: "100px",
-                        fontSize: "13px",
-                        fontWeight: "700",
-                        cursor: "pointer",
-                        transition: "all 0.15s",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "8px",
-                          height: "8px",
-                          borderRadius: "50%",
-                          background: agent.autoAssignEnabled
-                            ? "#0f5c2e"
-                            : "#94a3b8",
-                        }}
-                      />
-                      {agent.autoAssignEnabled ? "✅ Enabled" : "⭕ Disabled"}
-                    </button>
-                    {agent.autoAssignEnabled && (
-                      <span style={{ fontSize: "12px", color: "#0f5c2e" }}>
-                        {agent.assignedTypes?.length > 0
-                          ? `Handling: ${agent.assignedTypes.length} type(s)`
-                          : "Handling all types"}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button
-                      onClick={() =>
-                        navigate(`/admin/agent/${agent.id}/performance`)
-                      }
-                      style={{
-                        padding: "7px 14px",
-                        background: "#0f5c2e",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "7px",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        cursor: "pointer",
-                      }}
-                    >
-                      📊 Performance
-                    </button>
-                    <button
-                      onClick={() => openEditForm(agent)}
-                      style={{
-                        padding: "7px 14px",
-                        background: "#1e40af",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "7px",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        cursor: "pointer",
-                      }}
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleToggleActive(agent.id, agent.isActive)
-                      }
-                      style={{
-                        padding: "7px 14px",
-                        background: agent.isActive ? "#fff7ed" : "#f0fdf4",
-                        color: agent.isActive ? "#d97706" : "#0f5c2e",
-                        border: `1px solid ${agent.isActive ? "#fed7aa" : "#bbf7d0"}`,
-                        borderRadius: "7px",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {agent.isActive ? "⏸️ Deactivate" : "▶️ Activate"}
-                    </button>
-                    <button
-                      onClick={() => setConfirmDelete(agent)}
-                      style={{
-                        padding: "7px 14px",
-                        background: "#fef2f2",
-                        color: "#dc2626",
-                        border: "1px solid #fecaca",
-                        borderRadius: "7px",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        cursor: "pointer",
-                      }}
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-
-                {/* Expanded Auto-assign Settings */}
-                {expandedAgent === agent.id && (
-                  <div
-                    style={{
-                      padding: "16px 20px",
-                      borderTop: "1px solid #f1f5f1",
-                      background: "#f0fdf4",
+                      marginBottom: agent.autoAssignEnabled ? "16px" : "0",
                     }}
                   >
                     <div
                       style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr auto",
-                        gap: "16px",
-                        alignItems: "start",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
                       }}
                     >
-                      <div>
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: "600",
+                          color: "#64748b",
+                        }}
+                      >
+                        Auto-assign tickets:
+                      </span>
+
+                      {/* Toggle Switch */}
+                      <div
+                        onClick={() => handleToggleAgentAutoAssign(agent)}
+                        style={{
+                          width: "48px",
+                          height: "26px",
+                          borderRadius: "100px",
+                          background: agent.autoAssignEnabled
+                            ? "#0f5c2e"
+                            : "#d1dbd1",
+                          position: "relative",
+                          cursor: "pointer",
+                          transition: "background 0.2s",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "20px",
+                            height: "20px",
+                            borderRadius: "50%",
+                            background: "#fff",
+                            position: "absolute",
+                            top: "3px",
+                            left: agent.autoAssignEnabled ? "25px" : "3px",
+                            transition: "left 0.2s",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                          }}
+                        />
+                      </div>
+
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: "700",
+                          color: agent.autoAssignEnabled
+                            ? "#0f5c2e"
+                            : "#94a3b8",
+                        }}
+                      >
+                        {agent.autoAssignEnabled ? "Enabled" : "Disabled"}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        onClick={() =>
+                          navigate(`/admin/agent/${agent.id}/performance`)
+                        }
+                        style={{
+                          padding: "7px 14px",
+                          background: "#0f5c2e",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "7px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                        }}
+                      >
+                        📊 Performance
+                      </button>
+                      <button
+                        onClick={() => openEditForm(agent)}
+                        style={{
+                          padding: "7px 14px",
+                          background: "#1e40af",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "7px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                        }}
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleToggleActive(agent.id, agent.isActive)
+                        }
+                        style={{
+                          padding: "7px 14px",
+                          background: agent.isActive ? "#fff7ed" : "#f0fdf4",
+                          color: agent.isActive ? "#d97706" : "#0f5c2e",
+                          border: `1px solid ${agent.isActive ? "#fed7aa" : "#bbf7d0"}`,
+                          borderRadius: "7px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {agent.isActive ? "⏸️ Deactivate" : "▶️ Activate"}
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(agent)}
+                        style={{
+                          padding: "7px 14px",
+                          background: "#fef2f2",
+                          color: "#dc2626",
+                          border: "1px solid #fecaca",
+                          borderRadius: "7px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                        }}
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Filing Types — only show when enabled */}
+                  {agent.autoAssignEnabled && (
+                    <div
+                      style={{
+                        background: "#fff",
+                        borderRadius: "10px",
+                        border: "1px solid #e8ede8",
+                        padding: "14px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: "12px",
+                        }}
+                      >
                         <p
                           style={{
                             fontSize: "13px",
                             fontWeight: "700",
-                            color: "#0f5c2e",
-                            marginBottom: "10px",
+                            color: "#0a1628",
                           }}
                         >
-                          📋 Select filing types for this agent:
+                          📋 Select ticket types for this agent:
                         </p>
                         <div
                           style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(3, 1fr)",
+                            display: "flex",
                             gap: "8px",
+                            alignItems: "center",
                           }}
                         >
-                          {FILING_TYPES.map((type) => {
-                            const isSelected = (
-                              agent.assignedTypes || []
-                            ).includes(type.value);
-                            return (
-                              <label
-                                key={type.value}
+                          <button
+                            onClick={() => {
+                              const allTypes = FILING_TYPES.map(
+                                (t) => t.value,
+                              );
+                              const allSelected = FILING_TYPES.every((t) =>
+                                (agent.assignedTypes || []).includes(t.value),
+                              );
+                              handleUpdateAgentTypes(
+                                agent,
+                                allSelected ? [] : allTypes,
+                              );
+                            }}
+                            style={{
+                              padding: "5px 12px",
+                              background: "#f8faf8",
+                              border: "1px solid #e8ede8",
+                              borderRadius: "6px",
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              color: "#0a1628",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {FILING_TYPES.every((t) =>
+                              (agent.assignedTypes || []).includes(t.value),
+                            )
+                              ? "☑️ Deselect All"
+                              : "☐ Select All"}
+                          </button>
+                          <div style={{ minWidth: "120px" }}>
+                            <input
+                              type="number"
+                              defaultValue={agent.maxFilings || 20}
+                              min={1}
+                              max={50}
+                              onBlur={(e) =>
+                                handleUpdateMaxFilings(agent, e.target.value)
+                              }
+                              style={{
+                                width: "100%",
+                                padding: "5px 10px",
+                                border: "1.5px solid #86efac",
+                                borderRadius: "6px",
+                                fontSize: "13px",
+                                fontWeight: "600",
+                                color: "#0f5c2e",
+                                background: "#f0fdf4",
+                                outline: "none",
+                                boxSizing: "border-box",
+                              }}
+                            />
+                            <p
+                              style={{
+                                fontSize: "11px",
+                                color: "#64748b",
+                                marginTop: "2px",
+                                textAlign: "center",
+                              }}
+                            >
+                              Max tickets
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(3, 1fr)",
+                          gap: "8px",
+                        }}
+                      >
+                        {FILING_TYPES.map((type) => {
+                          const isSelected = (
+                            agent.assignedTypes || []
+                          ).includes(type.value);
+                          return (
+                            <label
+                              key={type.value}
+                              onClick={() => {
+                                const current = agent.assignedTypes || [];
+                                const updated = isSelected
+                                  ? current.filter((t) => t !== type.value)
+                                  : [...current, type.value];
+                                handleUpdateAgentTypes(agent, updated);
+                              }}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                padding: "10px 12px",
+                                background: isSelected ? "#e8f5ee" : "#f8faf8",
+                                border: `1.5px solid ${isSelected ? "#0f5c2e" : "#e8ede8"}`,
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                transition: "all 0.15s",
+                              }}
+                            >
+                              {/* Checkbox */}
+                              <div
                                 style={{
+                                  width: "18px",
+                                  height: "18px",
+                                  borderRadius: "4px",
+                                  border: `2px solid ${isSelected ? "#0f5c2e" : "#d1dbd1"}`,
+                                  background: isSelected ? "#0f5c2e" : "#fff",
                                   display: "flex",
                                   alignItems: "center",
-                                  gap: "8px",
-                                  padding: "8px 12px",
-                                  background: isSelected ? "#e8f5ee" : "#fff",
-                                  border: `1.5px solid ${isSelected ? "#0f5c2e" : "#e8ede8"}`,
-                                  borderRadius: "8px",
-                                  cursor: "pointer",
+                                  justifyContent: "center",
+                                  flexShrink: 0,
+                                  transition: "all 0.15s",
+                                }}
+                              >
+                                {isSelected && (
+                                  <span
+                                    style={{
+                                      color: "#fff",
+                                      fontSize: "11px",
+                                      fontWeight: "800",
+                                    }}
+                                  >
+                                    ✓
+                                  </span>
+                                )}
+                              </div>
+                              <span style={{ fontSize: "13px" }}>
+                                {type.icon}
+                              </span>
+                              <span
+                                style={{
                                   fontSize: "13px",
-                                  fontWeight: isSelected ? "600" : "400",
+                                  fontWeight: isSelected ? "700" : "400",
                                   color: isSelected ? "#0f5c2e" : "#0a1628",
                                 }}
                               >
-                                <input
-                                  type="checkbox"
-                                  checked={isSelected}
-                                  onChange={() => {
-                                    const current = agent.assignedTypes || [];
-                                    const updated = isSelected
-                                      ? current.filter((t) => t !== type.value)
-                                      : [...current, type.value];
-                                    handleUpdateAgentTypes(agent, updated);
-                                  }}
-                                  style={{ display: "none" }}
-                                />
-                                <span>{type.icon}</span>
-                                <span>{type.label}</span>
-                                {isSelected && (
-                                  <span style={{ marginLeft: "auto" }}>✓</span>
-                                )}
-                              </label>
-                            );
-                          })}
-                        </div>
-                        <p
-                          style={{
-                            fontSize: "12px",
-                            color: "#64748b",
-                            marginTop: "8px",
-                          }}
-                        >
-                          {(agent.assignedTypes || []).length === 0
-                            ? "⚠️ No types selected — agent will receive all types"
-                            : `✅ Agent will only receive selected filing types`}
-                        </p>
+                                {type.label}
+                              </span>
+                            </label>
+                          );
+                        })}
                       </div>
-                      <div style={{ minWidth: "140px" }}>
-                        <p
-                          style={{
-                            fontSize: "13px",
-                            fontWeight: "700",
-                            color: "#0f5c2e",
-                            marginBottom: "8px",
-                          }}
-                        >
-                          Max tickets:
-                        </p>
-                        <input
-                          type="number"
-                          defaultValue={agent.maxFilings || 20}
-                          min={1}
-                          max={50}
-                          onBlur={(e) =>
-                            handleUpdateMaxFilings(agent, e.target.value)
-                          }
-                          style={{
-                            width: "100%",
-                            padding: "8px 12px",
-                            border: "1.5px solid #86efac",
-                            borderRadius: "8px",
-                            fontSize: "14px",
-                            fontWeight: "600",
-                            color: "#0f5c2e",
-                            background: "#fff",
-                            outline: "none",
-                            boxSizing: "border-box",
-                          }}
-                        />
-                        <p
-                          style={{
-                            fontSize: "11px",
-                            color: "#64748b",
-                            marginTop: "4px",
-                          }}
-                        >
-                          Max active filings
-                        </p>
-                      </div>
+
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "#64748b",
+                          marginTop: "10px",
+                        }}
+                      >
+                        {(agent.assignedTypes || []).length === 0
+                          ? "⚠️ No types selected — agent will receive all filing types"
+                          : `✅ Agent will only receive: ${(agent.assignedTypes || [])
+                              .map(
+                                (t) =>
+                                  FILING_TYPES.find((f) => f.value === t)
+                                    ?.label,
+                              )
+                              .join(", ")}`}
+                      </p>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ))}
           </div>
