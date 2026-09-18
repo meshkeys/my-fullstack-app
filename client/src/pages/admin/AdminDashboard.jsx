@@ -20,21 +20,29 @@ function AdminDashboard() {
   const headers = { Authorization: `Bearer ${token}` };
   const baseUrl = import.meta.env.VITE_API_URL;
 
-  const fetchData = async () => {
+  const fetchAllData = async () => {
     try {
-      const [statsRes, filingsRes, agentsRes] = await Promise.all([
+      const [statsRes, agentsRes] = await Promise.all([
         axios.get(`${baseUrl}/api/admin/stats`, { headers }),
-        axios.get(
-          `${baseUrl}/api/admin/filings${filter !== "ALL" ? `?status=${filter}` : ""}`,
-          { headers },
-        ),
         axios.get(`${baseUrl}/api/admin/agents`, { headers }),
       ]);
       setStats(statsRes.data.stats);
-      setFilings(filingsRes.data.filings);
       setAgents(agentsRes.data.agents);
     } catch (error) {
-      console.error("Error fetching admin data:", error);
+      console.error("Error:", error);
+    }
+  };
+
+  const fetchFilings = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `${baseUrl}/api/admin/filings${filter !== "ALL" ? `?status=${filter}` : ""}`,
+        { headers },
+      );
+      setFilings(res.data.filings);
+    } catch (error) {
+      console.error("Error:", error);
       if (error.response?.status === 403) navigate("/admin");
     } finally {
       setLoading(false);
@@ -46,8 +54,16 @@ function AdminDashboard() {
       navigate("/admin");
       return;
     }
-    fetchData();
+    fetchFilings(); // Only fetch filings when filter changes
   }, [filter]);
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/admin");
+      return;
+    }
+    fetchAllData(); // Fetch stats and agents once on mount
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
@@ -81,7 +97,8 @@ function AdminDashboard() {
       setSuccessMsg(res.data.message);
       setSelectedFilings([]);
       setBulkAgent("");
-      fetchData();
+      fetchFilings();
+      fetchAllData();
       setTimeout(() => setSuccessMsg(""), 4000);
     } catch (error) {
       console.error("Bulk assign error:", error);

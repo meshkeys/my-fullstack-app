@@ -36,3 +36,27 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+// Simple cache
+const cache = {};
+const CACHE_TTL = 60 * 1000; // 1 minute
+
+app.use((req, res, next) => {
+  // Only cache GET requests
+  if (req.method !== "GET") return next();
+
+  const key = req.originalUrl;
+  const cached = cache[key];
+
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return res.json(cached.data);
+  }
+
+  const originalJson = res.json.bind(res);
+  res.json = (data) => {
+    cache[key] = { data, timestamp: Date.now() };
+    return originalJson(data);
+  };
+
+  next();
+});
