@@ -17,7 +17,7 @@ const { downloadFile } = require("../controllers/filingController");
 router.use(protect);
 
 router.get("/types", getFilingTypes);
-router.post("/", createFiling);
+router.post("/", upload.array("documents", 15), createFiling);
 router.get("/", getMyFilings);
 router.get("/download", downloadFile);
 router.get("/:id", getFilingById);

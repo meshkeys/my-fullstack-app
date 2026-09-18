@@ -102,6 +102,7 @@ const createBusiness = async (req, res) => {
         registrationDate: registrationDate ? new Date(registrationDate) : null,
         address: address || null,
         state: state || null,
+        cacCertificateUrl: req.file ? req.file.path : null,
         userId: req.user.id,
       },
     });

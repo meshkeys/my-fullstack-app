@@ -85,6 +85,7 @@ function BusinessSetup() {
     address: "",
     state: "",
   });
+  const [cacCertFile, setCacCertFile] = useState(null);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -104,7 +105,16 @@ function BusinessSetup() {
 
     try {
       setLoading(true);
-      await api.post("/api/business", formData);
+      const submitData = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        submitData.append(key, value);
+      });
+      if (cacCertFile) {
+        submitData.append("cacCertificate", cacCertFile);
+      }
+      await api.post("/api/business", submitData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       navigate("/dashboard");
     } catch (err) {
       setError(
@@ -306,6 +316,56 @@ function BusinessSetup() {
                 rows={3}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700 resize-none"
               />
+            </div>
+
+            {/* CAC Certificate Upload */}
+            <div
+              style={{
+                background: "#fff7ed",
+                border: "1px solid #fed7aa",
+                borderRadius: "12px",
+                padding: "20px",
+                marginTop: "20px",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "800",
+                  color: "#92400e",
+                  marginBottom: "6px",
+                }}
+              >
+                📎 Upload CAC Certificate
+              </h3>
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "#92400e",
+                  marginBottom: "14px",
+                }}
+              >
+                Your CAC Certificate is required for ALL filings. Upload it
+                once here and we'll attach it automatically to every request.
+              </p>
+              <input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => setCacCertFile(e.target.files[0])}
+                style={{ fontSize: "14px" }}
+              />
+              {cacCertFile && (
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "#0f5c2e",
+                    marginTop: "8px",
+                    fontWeight: "600",
+                  }}
+                >
+                  ✅ {cacCertFile.name} ready to upload
+                </p>
+              )}
             </div>
 
             {/* Buttons */}

@@ -13,6 +13,105 @@ const unformatNumber = (value) => {
   return value.toString().replace(/,/g, "");
 };
 
+const COMPULSORY_DOCS = {
+  ANNUAL_RETURNS: [
+    {
+      id: "cac_cert",
+      label: "CAC Certificate of Incorporation",
+      required: true,
+      hint: "Original certificate issued at registration",
+    },
+    {
+      id: "tax_clearance",
+      label: "Tax Clearance Certificate (TCC)",
+      required: true,
+      hint: "Current year TCC from FIRS",
+    },
+  ],
+  CHANGE_OF_DIRECTORS: [
+    {
+      id: "cac_cert",
+      label: "CAC Certificate of Incorporation",
+      required: true,
+      hint: "Original certificate issued at registration",
+    },
+    {
+      id: "passport_photo",
+      label: "Passport Photograph of New Director",
+      required: true,
+      hint: "Recent white background passport photo",
+    },
+    {
+      id: "valid_id",
+      label: "Valid ID of New Director",
+      required: true,
+      hint: "NIN slip, Passport, Drivers License or Voters Card",
+    },
+  ],
+  CHANGE_OF_ADDRESS: [
+    {
+      id: "cac_cert",
+      label: "CAC Certificate of Incorporation",
+      required: true,
+      hint: "Original certificate issued at registration",
+    },
+    {
+      id: "proof_of_address",
+      label: "Proof of New Address",
+      required: true,
+      hint: "Utility bill or tenancy agreement not older than 3 months",
+    },
+  ],
+  CHANGE_OF_NAME: [
+    {
+      id: "cac_cert",
+      label: "CAC Certificate of Incorporation",
+      required: true,
+      hint: "Original certificate issued at registration",
+    },
+    {
+      id: "availability_letter",
+      label: "Name Availability Letter",
+      required: false,
+      hint: "If already obtained from CAC portal",
+    },
+  ],
+  INCREASE_SHARE_CAPITAL: [
+    {
+      id: "cac_cert",
+      label: "CAC Certificate of Incorporation",
+      required: true,
+      hint: "Original certificate issued at registration",
+    },
+    {
+      id: "existing_memat",
+      label: "Current MEMAT/Articles of Association",
+      required: true,
+      hint: "Existing Memorandum and Articles of Association",
+    },
+  ],
+  AUDITED_ACCOUNTS: [
+    {
+      id: "cac_cert",
+      label: "CAC Certificate of Incorporation",
+      required: true,
+      hint: "Original certificate issued at registration",
+    },
+    {
+      id: "signed_accounts",
+      label: "Signed Audited Financial Statements",
+      required: true,
+      hint: "Must be signed by director and auditor",
+    },
+    {
+      id: "auditor_cert",
+      label: "Auditor's Practicing Certificate",
+      required: true,
+      hint: "Current practicing certificate of the auditor",
+    },
+  ],
+};
+
 const INTAKE_FORMS = {
   ANNUAL_RETURNS: [
     {
@@ -593,6 +692,7 @@ function NewFiling() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
+  const [uploadedDocs, setUploadedDocs] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -662,6 +762,10 @@ function NewFiling() {
     }
   };
 
+  const handleDocUpload = (docId, file) => {
+    setUploadedDocs((prev) => ({ ...prev, [docId]: file }));
+  };
+
   // Check if field should be shown based on conditions
   const shouldShowField = (field) => {
     if (field.showIf) {
@@ -677,10 +781,17 @@ function NewFiling() {
     setError("");
     setLoading(true);
     try {
-      await api.post("/api/filings", {
-        filingType: selectedType.type,
-        businessId: selectedBusiness.id,
-        formData,
+      const submitData = new FormData();
+      submitData.append("filingType", selectedType.type);
+      submitData.append("businessId", selectedBusiness.id);
+      submitData.append("formData", JSON.stringify(formData));
+
+      Object.entries(uploadedDocs).forEach(([docId, file]) => {
+        if (file) submitData.append("documents", file, `${docId}_${file.name}`);
+      });
+
+      await api.post("/api/filings", submitData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
       setSuccess(true);
     } catch (err) {
@@ -699,6 +810,9 @@ function NewFiling() {
   };
 
   const sections = selectedType ? INTAKE_FORMS[selectedType.type] || [] : [];
+  const requiredDocs = selectedType
+    ? COMPULSORY_DOCS[selectedType.type] || []
+    : [];
 
   // Render a single field
   const renderField = (field) => {
@@ -854,7 +968,7 @@ function NewFiling() {
           <span className="text-xl font-bold text-green-800">CAC</span>
           <span className="text-xl font-semibold text-green-600">Filing</span>
         </div>
-        <span className="text-sm text-gray-500">Step {step} of 3</span>
+        <span className="text-sm text-gray-500">Step {step} of 5</span>
       </nav>
 
       <div className="max-w-2xl mx-auto px-6 py-12">
@@ -867,16 +981,71 @@ function NewFiling() {
           </p>
         </div>
 
-        {/* Progress Bar */}
-        <div className="flex items-center gap-2 mb-8">
-          {[1, 2, 3].map((s) => (
+        {/* Step Progress with Labels */}
+        <div style={{ marginBottom: "32px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: "8px",
+            }}
+          >
+            {[
+              { num: 1, label: "Filing Type" },
+              { num: 2, label: "Business" },
+              { num: 3, label: "Documents" },
+              { num: 4, label: "Information" },
+              { num: 5, label: "Review" },
+            ].map((s) => (
+              <div key={s.num} style={{ textAlign: "center", flex: 1 }}>
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    background: step >= s.num ? "#0f5c2e" : "#f1f5f1",
+                    color: step >= s.num ? "#fff" : "#94a3b8",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "14px",
+                    fontWeight: "800",
+                    margin: "0 auto 4px",
+                    border: step === s.num ? "3px solid #86efac" : "none",
+                  }}
+                >
+                  {step > s.num ? "✓" : s.num}
+                </div>
+                <p
+                  style={{
+                    fontSize: "11px",
+                    color: step >= s.num ? "#0f5c2e" : "#94a3b8",
+                    fontWeight: step === s.num ? "700" : "400",
+                  }}
+                >
+                  {s.label}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div
+            style={{
+              height: "4px",
+              background: "#f1f5f1",
+              borderRadius: "100px",
+              position: "relative",
+            }}
+          >
             <div
-              key={s}
-              className={`flex-1 h-2 rounded-full transition-all ${
-                step >= s ? "bg-green-700" : "bg-gray-200"
-              }`}
+              style={{
+                height: "100%",
+                background: "#0f5c2e",
+                borderRadius: "100px",
+                width: `${((step - 1) / 4) * 100}%`,
+                transition: "width 0.3s",
+              }}
             />
-          ))}
+          </div>
         </div>
 
         {error && (
@@ -1019,8 +1188,270 @@ function NewFiling() {
           </div>
         )}
 
-        {/* Step 3 — Intake Form */}
+        {/* Step 3 — Upload Compulsory Documents */}
         {step === 3 && (
+          <div>
+            <h2
+              style={{
+                fontSize: "22px",
+                fontWeight: "900",
+                color: "#0a1628",
+                marginBottom: "6px",
+              }}
+            >
+              📎 Required Documents
+            </h2>
+            <p
+              style={{
+                fontSize: "15px",
+                color: "#64748b",
+                marginBottom: "6px",
+              }}
+            >
+              Upload these documents so our agent can start working on your
+              request immediately.
+            </p>
+            <div
+              style={{
+                padding: "12px 16px",
+                background: "#eff6ff",
+                border: "1px solid #bfdbfe",
+                borderRadius: "10px",
+                marginBottom: "24px",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "#1e40af",
+                  fontWeight: "500",
+                }}
+              >
+                💡 These documents are needed by our legal team to prepare
+                your CAC filing. All files are stored securely and only
+                accessible by your assigned agent.
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+                marginBottom: "24px",
+              }}
+            >
+              {requiredDocs.map((doc) => (
+                <div
+                  key={doc.id}
+                  style={{
+                    background: "#fff",
+                    border: `1.5px solid ${uploadedDocs[doc.id] ? "#0f5c2e" : doc.required ? "#e8ede8" : "#f1f5f1"}`,
+                    borderRadius: "12px",
+                    padding: "16px 20px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontSize: "15px",
+                            fontWeight: "700",
+                            color: "#0a1628",
+                          }}
+                        >
+                          {doc.label}
+                        </p>
+                        {doc.required ? (
+                          <span
+                            style={{
+                              padding: "2px 8px",
+                              background: "#fef2f2",
+                              color: "#dc2626",
+                              borderRadius: "100px",
+                              fontSize: "11px",
+                              fontWeight: "700",
+                            }}
+                          >
+                            Required
+                          </span>
+                        ) : (
+                          <span
+                            style={{
+                              padding: "2px 8px",
+                              background: "#f8faf8",
+                              color: "#64748b",
+                              borderRadius: "100px",
+                              fontSize: "11px",
+                              fontWeight: "600",
+                            }}
+                          >
+                            Optional
+                          </span>
+                        )}
+                      </div>
+                      <p style={{ fontSize: "13px", color: "#64748b" }}>
+                        {doc.hint}
+                      </p>
+                    </div>
+                    {uploadedDocs[doc.id] && (
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          color: "#0f5c2e",
+                        }}
+                      >
+                        <span style={{ fontSize: "20px" }}>✅</span>
+                        <span
+                          style={{ fontSize: "13px", fontWeight: "600" }}
+                        >
+                          Uploaded
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {uploadedDocs[doc.id] ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "8px 12px",
+                        background: "#f0fdf4",
+                        borderRadius: "8px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          color: "#0f5c2e",
+                          fontWeight: "500",
+                        }}
+                      >
+                        📄 {uploadedDocs[doc.id].name}
+                      </span>
+                      <button
+                        onClick={() =>
+                          setUploadedDocs((prev) => {
+                            const n = { ...prev };
+                            delete n[doc.id];
+                            return n;
+                          })
+                        }
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#dc2626",
+                          cursor: "pointer",
+                          fontSize: "13px",
+                          marginLeft: "12px",
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <label
+                      style={{
+                        display: "block",
+                        padding: "12px 16px",
+                        background: "#f8faf8",
+                        border: "1.5px dashed #d1dbd1",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        textAlign: "center",
+                      }}
+                    >
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        style={{ display: "none" }}
+                        onChange={(e) => {
+                          if (e.target.files[0]) {
+                            handleDocUpload(doc.id, e.target.files[0]);
+                          }
+                        }}
+                      />
+                      <span style={{ fontSize: "14px", color: "#64748b" }}>
+                        📁 Click to upload{" "}
+                        <span
+                          style={{ color: "#0f5c2e", fontWeight: "600" }}
+                        >
+                          PDF, JPG or PNG
+                        </span>{" "}
+                        — max 5MB
+                      </span>
+                    </label>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button
+                onClick={() => setStep(2)}
+                style={{
+                  flex: 1,
+                  padding: "14px",
+                  border: "1.5px solid #0f5c2e",
+                  borderRadius: "10px",
+                  fontSize: "15px",
+                  fontWeight: "600",
+                  color: "#0f5c2e",
+                  background: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                ← Back
+              </button>
+              <button
+                onClick={() => {
+                  const missing = requiredDocs.find(
+                    (d) => d.required && !uploadedDocs[d.id],
+                  );
+                  if (missing)
+                    return setError(`Please upload: ${missing.label}`);
+                  setError("");
+                  setStep(4);
+                }}
+                style={{
+                  flex: 1,
+                  padding: "14px",
+                  background: "#0f5c2e",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "10px",
+                  fontSize: "15px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                }}
+              >
+                Continue →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4 — Intake Form */}
+        {step === 4 && (
           <div>
             <h2 className="text-xl font-bold text-green-900 mb-2">
               {selectedType?.label} — Information Form
@@ -1031,9 +1462,8 @@ function NewFiling() {
             </p>
             <div className="mb-6 p-3 bg-blue-50 border border-blue-100 rounded-xl">
               <p className="text-xs text-blue-800">
-                💡 <strong>You don't need any documents right now.</strong> Just
-                fill in the details — our agent will prepare everything and
-                reach out if they need more information.
+                💡 Our agent will reach out if they need any additional
+                information beyond what's requested here.
               </p>
             </div>
 
@@ -1054,8 +1484,66 @@ function NewFiling() {
               ))}
             </div>
 
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setStep(3)}
+                className="flex-1 py-3 border border-green-800 text-green-800 font-semibold rounded-xl hover:bg-green-50 transition"
+              >
+                ← Back
+              </button>
+              <button
+                onClick={() => {
+                  const allFields = sections.flatMap((s) => s.fields);
+                  const requiredFields = allFields.filter(
+                    (f) => f.required && shouldShowField(f),
+                  );
+                  const missing = requiredFields.find((f) => !formData[f.name]);
+                  if (missing)
+                    return setError(`Please fill in: ${missing.label}`);
+                  setError("");
+                  setStep(5);
+                }}
+                className="flex-1 py-3 bg-green-800 text-white font-semibold rounded-xl hover:bg-green-700 transition"
+              >
+                Continue →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5 — Review & Submit */}
+        {step === 5 && (
+          <div>
+            <h2 className="text-xl font-bold text-green-900 mb-2">
+              Review Your Filing Request
+            </h2>
+            <p className="text-gray-500 text-sm mb-6">
+              Please confirm everything below before submitting
+            </p>
+
+            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm mb-6 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Filing Type</span>
+                <span className="text-gray-800 font-medium">
+                  {selectedType?.label}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Business</span>
+                <span className="text-gray-800 font-medium">
+                  {selectedBusiness?.businessName}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Documents Uploaded</span>
+                <span className="text-gray-800 font-medium">
+                  {Object.values(uploadedDocs).filter(Boolean).length}
+                </span>
+              </div>
+            </div>
+
             {/* Cost Summary */}
-            <div className="mt-6 bg-green-50 rounded-2xl p-5 border border-green-200">
+            <div className="bg-green-50 rounded-2xl p-5 border border-green-200">
               <h3 className="font-bold text-green-900 mb-3">Cost Summary</h3>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
@@ -1087,23 +1575,13 @@ function NewFiling() {
 
             <div className="flex gap-3 mt-6">
               <button
-                onClick={() => setStep(2)}
+                onClick={() => setStep(4)}
                 className="flex-1 py-3 border border-green-800 text-green-800 font-semibold rounded-xl hover:bg-green-50 transition"
               >
                 ← Back
               </button>
               <button
-                onClick={() => {
-                  const allFields = sections.flatMap((s) => s.fields);
-                  const requiredFields = allFields.filter(
-                    (f) => f.required && shouldShowField(f),
-                  );
-                  const missing = requiredFields.find((f) => !formData[f.name]);
-                  if (missing)
-                    return setError(`Please fill in: ${missing.label}`);
-                  setError("");
-                  handleSubmit();
-                }}
+                onClick={handleSubmit}
                 disabled={loading}
                 className="flex-1 py-3 bg-green-800 text-white font-semibold rounded-xl hover:bg-green-700 transition disabled:opacity-50"
               >

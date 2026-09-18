@@ -162,6 +162,17 @@ function AdminFilingDetail() {
 
   const formData = filing.formData || {};
 
+  // Flatten attachments from every message on this filing, regardless of when they were sent
+  const allAttachments = (filing.messages || []).flatMap((msg) =>
+    Array.isArray(msg.attachments)
+      ? msg.attachments.map((file) => ({
+          ...file,
+          from: msg.sender,
+          date: msg.createdAt,
+        }))
+      : [],
+  );
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Navbar */}
@@ -264,6 +275,37 @@ function AdminFilingDetail() {
               <h3 className="font-bold text-gray-800 mb-4">
                 📋 Client Submitted Information
               </h3>
+
+              {allAttachments.length > 0 && (
+                <div className="mb-5 p-4 bg-green-50 border border-green-100 rounded-xl">
+                  <p className="text-xs font-bold text-green-800 mb-2">
+                    📎 All Documents ({allAttachments.length})
+                  </p>
+                  <div className="space-y-1">
+                    {allAttachments.map((file, i) => {
+                      const fileUrl = file.url || file.path || file.secure_url;
+                      const fileName =
+                        file.name || file.originalname || `Document ${i + 1}`;
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => handleDownload(fileUrl, fileName)}
+                          className="w-full flex items-center justify-between gap-2 text-xs text-left bg-white border border-green-100 rounded-lg px-3 py-2 hover:bg-green-100 transition"
+                        >
+                          <span className="text-gray-800 font-medium truncate">
+                            📄 {fileName}
+                          </span>
+                          <span className="text-green-700 font-medium whitespace-nowrap">
+                            Download
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {Object.keys(formData).length === 0 ? (
                 <p className="text-gray-400 text-sm">No form data available</p>
               ) : (

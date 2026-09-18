@@ -36,6 +36,7 @@ model Business {
   address          String?
   state            String?
   status           String       @default("active")
+  cacCertificateUrl String?
   userId           String
   user             User         @relation(fields: [userId], references: [id])
   createdAt        DateTime     @default(now())

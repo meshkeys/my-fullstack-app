@@ -237,6 +237,24 @@ const createFiling = async (req, res) => {
       },
     });
 
+    // Save any documents uploaded with the filing
+    if (req.files && req.files.length > 0) {
+      const uploadedFiles = req.files.map((file) => ({
+        name: file.originalname,
+        url: file.path,
+        publicId: file.filename,
+      }));
+
+      await prisma.filingMessage.create({
+        data: {
+          filingId: filing.id,
+          sender: "USER",
+          message: `Client uploaded ${uploadedFiles.length} document(s) with this filing`,
+          attachments: uploadedFiles,
+        },
+      });
+    }
+
     // Send confirmation email
     try {
       await sendFilingConfirmationEmail(
