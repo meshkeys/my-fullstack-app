@@ -722,6 +722,17 @@ function NewFiling() {
     fetchData();
   }, [preSelectedType]);
 
+  // Auto-fill form fields from the user's own profile (name/email/phone)
+  useEffect(() => {
+    if (!userProfile || selectedType?.type !== "CHANGE_OF_DIRECTORS") return;
+    setFormData((prev) => ({
+      directorFullName: userProfile.fullName || "",
+      directorEmail: userProfile.email || "",
+      directorPhone: userProfile.phoneNumber || "",
+      ...prev,
+    }));
+  }, [userProfile, selectedType]);
+
   // Auto-populate form when business is selected
   const handleBusinessSelect = (business) => {
     setSelectedBusiness(business);
