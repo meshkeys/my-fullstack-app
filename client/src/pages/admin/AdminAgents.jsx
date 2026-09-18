@@ -59,12 +59,14 @@ function AdminAgents() {
 
   const handleToggleAgentAutoAssign = async (agent) => {
     const newValue = !agent.autoAssignEnabled;
+
     // Optimistically update UI immediately
     setAgents((prev) =>
       prev.map((a) =>
         a.id === agent.id ? { ...a, autoAssignEnabled: newValue } : a,
       ),
     );
+
     try {
       await axios.put(
         `${baseUrl}/api/admin/agents/${agent.id}/assignment`,
@@ -75,8 +77,14 @@ function AdminAgents() {
         },
         { headers },
       );
-      fetchData();
+      // Don't call fetchData() here — it resets the UI
     } catch (error) {
+      // Revert on error
+      setAgents((prev) =>
+        prev.map((a) =>
+          a.id === agent.id ? { ...a, autoAssignEnabled: !newValue } : a,
+        ),
+      );
       console.error("Error toggling auto assign:", error);
     }
   };
@@ -96,9 +104,10 @@ function AdminAgents() {
         },
         { headers },
       );
-      fetchData();
+      // Don't call fetchData() here
     } catch (error) {
       console.error("Error updating agent types:", error);
+      fetchData(); // Only revert on error
     }
   };
 
@@ -1160,9 +1169,7 @@ function AdminAgents() {
                         >
                           <button
                             onClick={() => {
-                              const allTypes = FILING_TYPES.map(
-                                (t) => t.value,
-                              );
+                              const allTypes = FILING_TYPES.map((t) => t.value);
                               const allSelected = FILING_TYPES.every((t) =>
                                 (agent.assignedTypes || []).includes(t.value),
                               );
@@ -1310,7 +1317,9 @@ function AdminAgents() {
                       >
                         {(agent.assignedTypes || []).length === 0
                           ? "⚠️ No types selected — agent will receive all filing types"
-                          : `✅ Agent will only receive: ${(agent.assignedTypes || [])
+                          : `✅ Agent will only receive: ${(
+                              agent.assignedTypes || []
+                            )
                               .map(
                                 (t) =>
                                   FILING_TYPES.find((f) => f.value === t)
