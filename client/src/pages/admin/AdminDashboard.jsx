@@ -20,14 +20,6 @@ function AdminDashboard() {
   const headers = { Authorization: `Bearer ${token}` };
   const baseUrl = import.meta.env.VITE_API_URL;
 
-  useEffect(() => {
-    if (!token) {
-      navigate("/admin");
-      return;
-    }
-    fetchData();
-  }, [filter]);
-
   const fetchData = async () => {
     try {
       const [statsRes, filingsRes, agentsRes] = await Promise.all([
@@ -48,6 +40,14 @@ function AdminDashboard() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/admin");
+      return;
+    }
+    fetchData();
+  }, [filter]);
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
@@ -196,8 +196,7 @@ function AdminDashboard() {
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           {[
             { label: "👥 Agents", path: "/admin/agents" },
-            { label: "⏱️ SLA", path: "/admin/sla" },
-            { label: "💰 Pricing", path: "/admin/pricing" },
+            { label: "⚙️ Settings", path: "/admin/settings" },
           ].map((item, i) => (
             <button
               key={i}

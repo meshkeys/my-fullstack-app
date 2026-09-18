@@ -31,6 +31,7 @@ function AdminAgents() {
   const [successMsg, setSuccessMsg] = useState("");
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [globalAutoAssign, setGlobalAutoAssign] = useState(false);
 
   const token = localStorage.getItem("adminToken");
   const headers = { Authorization: `Bearer ${token}` };
@@ -38,10 +39,15 @@ function AdminAgents() {
 
   const fetchData = async () => {
     try {
-      const agentsRes = await axios.get(`${baseUrl}/api/admin/agents`, {
-        headers,
-      });
+      const [agentsRes, settingsRes] = await Promise.all([
+        axios.get(`${baseUrl}/api/admin/agents`, { headers }),
+        axios.get(`${baseUrl}/api/admin/settings`, { headers }),
+      ]);
       setAgents(agentsRes.data.agents);
+      const autoAssign = settingsRes.data.settings.find(
+        (s) => s.key === "auto_assign_enabled",
+      );
+      setGlobalAutoAssign(autoAssign?.value === "true");
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -202,20 +208,6 @@ function AdminAgents() {
     }
   };
 
-  const handleAutoAssignNow = async () => {
-    try {
-      const res = await axios.post(
-        `${baseUrl}/api/admin/filings/auto-assign`,
-        {},
-        { headers },
-      );
-      setSuccessMsg(res.data.message);
-      setTimeout(() => setSuccessMsg(""), 4000);
-    } catch (error) {
-      console.error("Auto assign error:", error);
-    }
-  };
-
   const openEditForm = (agent) => {
     setEditingAgent(agent);
     setFormData({
@@ -341,21 +333,6 @@ function AdminAgents() {
             </p>
           </div>
           <div style={{ display: "flex", gap: "10px" }}>
-            <button
-              onClick={handleAutoAssignNow}
-              style={{
-                padding: "10px 18px",
-                background: "#1e40af",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: "14px",
-                fontWeight: "700",
-                cursor: "pointer",
-              }}
-            >
-              ⚡ Auto-Assign Now
-            </button>
             <button
               onClick={() => {
                 setShowForm(true);
@@ -987,7 +964,7 @@ function AdminAgents() {
                   </div>
                 </div>
 
-                {/* Auto-assign Toggle Row */}
+                {/* Auto-assign Toggle Row — only show when globally enabled */}
                 <div
                   style={{
                     padding: "14px 20px",
@@ -995,13 +972,15 @@ function AdminAgents() {
                     borderTop: "1px solid #f1f5f1",
                   }}
                 >
-                  {/* Toggle Row */}
                   <div
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      marginBottom: agent.autoAssignEnabled ? "16px" : "0",
+                      marginBottom:
+                        agent.autoAssignEnabled && globalAutoAssign
+                          ? "16px"
+                          : "0",
                     }}
                   >
                     <div
@@ -1011,60 +990,89 @@ function AdminAgents() {
                         gap: "12px",
                       }}
                     >
-                      <span
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: "600",
-                          color: "#64748b",
-                        }}
-                      >
-                        Auto-assign tickets:
-                      </span>
-
-                      {/* Toggle Switch */}
-                      <div
-                        onClick={() => handleToggleAgentAutoAssign(agent)}
-                        style={{
-                          width: "48px",
-                          height: "26px",
-                          borderRadius: "100px",
-                          background: agent.autoAssignEnabled
-                            ? "#0f5c2e"
-                            : "#d1dbd1",
-                          position: "relative",
-                          cursor: "pointer",
-                          transition: "background 0.2s",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <div
+                      {globalAutoAssign ? (
+                        <>
+                          <span
+                            style={{
+                              fontSize: "13px",
+                              fontWeight: "600",
+                              color: "#64748b",
+                            }}
+                          >
+                            Auto-assign tickets:
+                          </span>
+                          <div
+                            onClick={() => handleToggleAgentAutoAssign(agent)}
+                            style={{
+                              width: "48px",
+                              height: "26px",
+                              borderRadius: "100px",
+                              background: agent.autoAssignEnabled
+                                ? "#0f5c2e"
+                                : "#d1dbd1",
+                              position: "relative",
+                              cursor: "pointer",
+                              transition: "background 0.2s",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "50%",
+                                background: "#fff",
+                                position: "absolute",
+                                top: "3px",
+                                left: agent.autoAssignEnabled
+                                  ? "25px"
+                                  : "3px",
+                                transition: "left 0.2s",
+                                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                              }}
+                            />
+                          </div>
+                          <span
+                            style={{
+                              fontSize: "13px",
+                              fontWeight: "700",
+                              color: agent.autoAssignEnabled
+                                ? "#0f5c2e"
+                                : "#94a3b8",
+                            }}
+                          >
+                            {agent.autoAssignEnabled
+                              ? "Enabled"
+                              : "Disabled"}
+                          </span>
+                        </>
+                      ) : (
+                        <span
                           style={{
-                            width: "20px",
-                            height: "20px",
-                            borderRadius: "50%",
-                            background: "#fff",
-                            position: "absolute",
-                            top: "3px",
-                            left: agent.autoAssignEnabled ? "25px" : "3px",
-                            transition: "left 0.2s",
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                            fontSize: "13px",
+                            color: "#94a3b8",
+                            fontStyle: "italic",
                           }}
-                        />
-                      </div>
-
-                      <span
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: "700",
-                          color: agent.autoAssignEnabled
-                            ? "#0f5c2e"
-                            : "#94a3b8",
-                        }}
-                      >
-                        {agent.autoAssignEnabled ? "Enabled" : "Disabled"}
-                      </span>
+                        >
+                          Auto-assign disabled globally — enable in{" "}
+                          <button
+                            onClick={() => navigate("/admin/settings")}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              color: "#0f5c2e",
+                              cursor: "pointer",
+                              fontWeight: "600",
+                              fontSize: "13px",
+                              padding: 0,
+                            }}
+                          >
+                            App Settings
+                          </button>
+                        </span>
+                      )}
                     </div>
-
+                    {/* Action buttons stay here */}
                     <div style={{ display: "flex", gap: "8px" }}>
                       <button
                         onClick={() =>
@@ -1133,8 +1141,8 @@ function AdminAgents() {
                     </div>
                   </div>
 
-                  {/* Filing Types — only show when enabled */}
-                  {agent.autoAssignEnabled && (
+                  {/* Filing Types — only show when globally enabled AND agent toggle is on */}
+                  {globalAutoAssign && agent.autoAssignEnabled && (
                     <div
                       style={{
                         background: "#fff",
@@ -1169,7 +1177,9 @@ function AdminAgents() {
                         >
                           <button
                             onClick={() => {
-                              const allTypes = FILING_TYPES.map((t) => t.value);
+                              const allTypes = FILING_TYPES.map(
+                                (t) => t.value,
+                              );
                               const allSelected = FILING_TYPES.every((t) =>
                                 (agent.assignedTypes || []).includes(t.value),
                               );
@@ -1195,17 +1205,27 @@ function AdminAgents() {
                               ? "☑️ Deselect All"
                               : "☐ Select All"}
                           </button>
-                          <div style={{ minWidth: "120px" }}>
+                          <div>
                             <input
                               type="number"
-                              defaultValue={agent.maxFilings || 20}
+                              value={agent.maxFilings || 20}
                               min={1}
-                              max={50}
+                              max={100}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                setAgents((prev) =>
+                                  prev.map((a) =>
+                                    a.id === agent.id
+                                      ? { ...a, maxFilings: val }
+                                      : a,
+                                  ),
+                                );
+                              }}
                               onBlur={(e) =>
                                 handleUpdateMaxFilings(agent, e.target.value)
                               }
                               style={{
-                                width: "100%",
+                                width: "70px",
                                 padding: "5px 10px",
                                 border: "1.5px solid #86efac",
                                 borderRadius: "6px",
@@ -1214,7 +1234,6 @@ function AdminAgents() {
                                 color: "#0f5c2e",
                                 background: "#f0fdf4",
                                 outline: "none",
-                                boxSizing: "border-box",
                               }}
                             />
                             <p
@@ -1230,7 +1249,6 @@ function AdminAgents() {
                           </div>
                         </div>
                       </div>
-
                       <div
                         style={{
                           display: "grid",
@@ -1264,7 +1282,6 @@ function AdminAgents() {
                                 transition: "all 0.15s",
                               }}
                             >
-                              {/* Checkbox */}
                               <div
                                 style={{
                                   width: "18px",
@@ -1276,7 +1293,6 @@ function AdminAgents() {
                                   alignItems: "center",
                                   justifyContent: "center",
                                   flexShrink: 0,
-                                  transition: "all 0.15s",
                                 }}
                               >
                                 {isSelected && (
@@ -1307,7 +1323,6 @@ function AdminAgents() {
                           );
                         })}
                       </div>
-
                       <p
                         style={{
                           fontSize: "12px",
@@ -1317,9 +1332,7 @@ function AdminAgents() {
                       >
                         {(agent.assignedTypes || []).length === 0
                           ? "⚠️ No types selected — agent will receive all filing types"
-                          : `✅ Agent will only receive: ${(
-                              agent.assignedTypes || []
-                            )
+                          : `✅ Agent handles: ${(agent.assignedTypes || [])
                               .map(
                                 (t) =>
                                   FILING_TYPES.find((f) => f.value === t)

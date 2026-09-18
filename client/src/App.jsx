@@ -11,16 +11,12 @@ import FilingDetail from "./pages/FilingDetail";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminFilingDetail from "./pages/admin/AdminFilingDetail";
-import AdminPricing from "./pages/admin/AdminPricing";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminAgents from "./pages/admin/AdminAgents";
-import AdminSLA from "./pages/admin/AdminSLA";
 import AgentPerformance from "./pages/admin/AgentPerformance";
 import AgentDashboard from "./pages/agent/AgentDashboard";
 import DocumentEditor from "./pages/agent/DocumentEditor";
-
-// Inside Routes:
-<Route path="/admin/pricing" element={<AdminPricing />} />;
+import AppSettings from "./pages/admin/AppSettings";
 
 function App() {
   return (
@@ -33,7 +29,6 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/admin/agents" element={<AdminAgents />} />
-        <Route path="/admin/sla" element={<AdminSLA />} />
         <Route
           path="/admin/agent/:id/performance"
           element={<AgentPerformance />}
@@ -78,11 +73,11 @@ function App() {
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/filing/:id" element={<AdminFilingDetail />} />
-        <Route path="/admin/pricing" element={<AdminPricing />} />
         <Route
           path="/admin/filing/:filingId/document/:templateId"
           element={<DocumentEditor />}
         />
+        <Route path="/admin/settings" element={<AppSettings />} />
       </Routes>
     </Router>
   );
