@@ -750,7 +750,9 @@ function NewFiling() {
       director1Nationality: business.directors?.[0]?.nationality || "Nigerian",
       director2Name: business.directors?.[1]?.fullName || "",
       director2Address: business.directors?.[1]?.address || "",
-      director2Nationality: business.directors?.[1]?.nationality || "Nigerian",
+      director2Nationality: business.directors?.[1]
+        ? business.directors[1].nationality || "Nigerian"
+        : "",
     };
 
     setFormData((prev) => ({ ...autoFilled, ...prev }));
@@ -1545,11 +1547,73 @@ function NewFiling() {
                   {selectedBusiness?.businessName}
                 </span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Documents Uploaded</span>
-                <span className="text-gray-800 font-medium">
-                  {Object.values(uploadedDocs).filter(Boolean).length}
-                </span>
+            </div>
+
+            {/* Documents Uploaded */}
+            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm mb-6">
+              <h3 className="font-bold text-green-900 mb-3">
+                📎 Documents Uploaded
+              </h3>
+              {requiredDocs.filter((doc) => uploadedDocs[doc.id]).length ===
+              0 ? (
+                <p className="text-sm text-gray-400">No documents uploaded</p>
+              ) : (
+                <div className="space-y-2">
+                  {requiredDocs
+                    .filter((doc) => uploadedDocs[doc.id])
+                    .map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex justify-between text-sm"
+                      >
+                        <span className="text-gray-500">{doc.label}</span>
+                        <span className="text-gray-800 font-medium">
+                          {uploadedDocs[doc.id].name}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {/* Your Answers */}
+            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm mb-6">
+              <h3 className="font-bold text-green-900 mb-4">
+                📝 Your Answers
+              </h3>
+              <div className="space-y-5">
+                {sections.map((section, sIndex) => {
+                  const visibleFields = section.fields.filter(
+                    (field) =>
+                      shouldShowField(field) && formData[field.name],
+                  );
+                  if (visibleFields.length === 0) return null;
+                  return (
+                    <div key={sIndex}>
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                        <span>{section.icon}</span>
+                        {section.section}
+                      </p>
+                      <div className="space-y-2">
+                        {visibleFields.map((field) => (
+                          <div
+                            key={field.name}
+                            className="flex gap-4 text-sm"
+                          >
+                            <span className="text-gray-500 w-48 flex-shrink-0">
+                              {field.label}
+                            </span>
+                            <span className="text-gray-800 font-medium">
+                              {field.type === "number_formatted"
+                                ? formatNumber(formData[field.name])
+                                : formData[field.name]}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
