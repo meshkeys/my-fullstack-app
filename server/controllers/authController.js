@@ -115,6 +115,7 @@ const login = async (req, res) => {
         email: user.email,
         phoneNumber: user.phoneNumber,
         isAdmin: user.isAdmin,
+        isAgent: user.isAgent,
       },
     });
   } catch (error) {

@@ -12,39 +12,50 @@ const getAgentStats = async (req, res) => {
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
 
-    const [
-      totalAssigned,
-      pending,
-      inReview,
-      completed,
-      completedThisWeek,
-      completedThisMonth,
-      slaBreached,
-      slaAtRisk,
-      awaitingInfo,
-    ] = await Promise.all([
-      prisma.filing.count({ where: { agentId } }),
-      prisma.filing.count({ where: { agentId, status: "PENDING" } }),
-      prisma.filing.count({ where: { agentId, status: "IN_REVIEW" } }),
-      prisma.filing.count({ where: { agentId, status: "COMPLETED" } }),
-      prisma.filing.count({
-        where: {
-          agentId,
-          status: "COMPLETED",
-          completedAt: { gte: startOfWeek },
-        },
-      }),
-      prisma.filing.count({
-        where: {
-          agentId,
-          status: "COMPLETED",
-          completedAt: { gte: startOfMonth },
-        },
-      }),
-      prisma.filing.count({ where: { agentId, slaStatus: "BREACHED" } }),
-      prisma.filing.count({ where: { agentId, slaStatus: "AT_RISK" } }),
-      prisma.filing.count({ where: { agentId, status: "AWAITING_INFO" } }),
-    ]);
+    // Grouped instead of one count() per status/slaStatus combination —
+    // cuts this endpoint from 9 simultaneous queries down to 4, which was
+    // exhausting the Supabase pooler's connection limit under load.
+    const [statusCounts, slaCounts, completedThisWeek, completedThisMonth] =
+      await Promise.all([
+        prisma.filing.groupBy({
+          by: ["status"],
+          where: { agentId },
+          _count: { id: true },
+        }),
+        prisma.filing.groupBy({
+          by: ["slaStatus"],
+          where: { agentId },
+          _count: { id: true },
+        }),
+        prisma.filing.count({
+          where: {
+            agentId,
+            status: "COMPLETED",
+            completedAt: { gte: startOfWeek },
+          },
+        }),
+        prisma.filing.count({
+          where: {
+            agentId,
+            status: "COMPLETED",
+            completedAt: { gte: startOfMonth },
+          },
+        }),
+      ]);
+
+    const countFor = (groups, key, value) =>
+      groups.find((g) => g[key] === value)?._count.id || 0;
+
+    const totalAssigned = statusCounts.reduce(
+      (acc, g) => acc + g._count.id,
+      0,
+    );
+    const pending = countFor(statusCounts, "status", "PENDING");
+    const inReview = countFor(statusCounts, "status", "IN_REVIEW");
+    const completed = countFor(statusCounts, "status", "COMPLETED");
+    const awaitingInfo = countFor(statusCounts, "status", "AWAITING_INFO");
+    const slaBreached = countFor(slaCounts, "slaStatus", "BREACHED");
+    const slaAtRisk = countFor(slaCounts, "slaStatus", "AT_RISK");
 
     // Calculate average response time
     const completedFilings = await prisma.filing.findMany({

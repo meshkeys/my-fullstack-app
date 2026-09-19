@@ -29,6 +29,7 @@ const protect = async (req, res, next) => {
         email: true,
         phoneNumber: true,
         isAdmin: true,
+        isAgent: true,
       },
     });
 
