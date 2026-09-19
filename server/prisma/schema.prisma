@@ -73,23 +73,26 @@ model Trustee {
 }
 
 model Filing {
-  id            String        @id @default(uuid())
-  filingType    FilingType
-  status        FilingStatus  @default(PENDING)
-  dueDate       DateTime
-  submittedAt   DateTime?
-  completedAt   DateTime?
-  amount        Float?
-  formData      Json?
-  slaDeadline   DateTime?
-  slaStatus     SLAStatus     @default(ON_TRACK)
-  agentId       String?
-  agent         User?         @relation("AgentFilings", fields: [agentId], references: [id])
-  businessId    String
-  business      Business      @relation(fields: [businessId], references: [id])
-  messages      FilingMessage[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id               String        @id @default(uuid())
+  filingType       FilingType
+  status           FilingStatus  @default(AWAITING_PAYMENT)
+  dueDate          DateTime
+  submittedAt      DateTime?
+  completedAt      DateTime?
+  amount           Float?
+  paymentStatus    PaymentStatus @default(UNPAID)
+  paymentReference String?       @unique
+  paidAt           DateTime?
+  formData         Json?
+  slaDeadline      DateTime?
+  slaStatus        SLAStatus     @default(ON_TRACK)
+  agentId          String?
+  agent            User?         @relation("AgentFilings", fields: [agentId], references: [id])
+  businessId       String
+  business         Business      @relation(fields: [businessId], references: [id])
+  messages         FilingMessage[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 }
 
 model FilingMessage {
@@ -170,6 +173,7 @@ enum FilingType {
 }
 
 enum FilingStatus {
+  AWAITING_PAYMENT
   PENDING
   IN_REVIEW
   AWAITING_INFO
@@ -188,4 +192,10 @@ enum SLAStatus {
   ON_TRACK
   AT_RISK
   BREACHED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  FAILED
 }

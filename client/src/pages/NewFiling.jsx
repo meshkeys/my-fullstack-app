@@ -690,7 +690,6 @@ function NewFiling() {
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [uploadedDocs, setUploadedDocs] = useState({});
 
@@ -790,7 +789,7 @@ function NewFiling() {
     return true;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmitAndPay = async () => {
     setError("");
     setLoading(true);
     try {
@@ -803,10 +802,16 @@ function NewFiling() {
         if (file) submitData.append("documents", file, `${docId}_${file.name}`);
       });
 
-      await api.post("/api/filings", submitData, {
+      const { data: filingRes } = await api.post("/api/filings", submitData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setSuccess(true);
+
+      const { data: payRes } = await api.post(
+        `/api/filings/${filingRes.filing.id}/pay`,
+      );
+
+      // Leaving the page for Paystack's checkout — no setLoading(false) here
+      window.location.href = payRes.authorizationUrl;
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong.");
     } finally {
@@ -923,49 +928,6 @@ function NewFiling() {
       </div>
     );
   };
-
-  if (success) {
-    return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center px-6">
-        <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-sm">
-          <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-2xl font-bold text-green-900">
-            Filing Request Submitted!
-          </h2>
-          <p className="text-gray-500 mt-2">
-            Our legal team will review your information and prepare all
-            necessary documents. You'll hear from us within 1 hour.
-          </p>
-          <div className="mt-6 p-4 bg-green-50 rounded-xl text-left space-y-2">
-            <p className="text-sm text-green-800 font-medium">
-              What happens next?
-            </p>
-            <p className="text-sm text-green-700">
-              📥 Our agent reviews your submission
-            </p>
-            <p className="text-sm text-green-700">
-              📄 Agent prepares all required documents
-            </p>
-            <p className="text-sm text-green-700">
-              📧 Agent contacts you if more info is needed
-            </p>
-            <p className="text-sm text-green-700">
-              📤 Agent submits to CAC on your behalf
-            </p>
-            <p className="text-sm text-green-700">
-              ✅ You receive confirmation when done
-            </p>
-          </div>
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="mt-6 w-full py-3 bg-green-800 text-white font-semibold rounded-xl hover:bg-green-700 transition"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-green-50">
@@ -1656,11 +1618,11 @@ function NewFiling() {
                 ← Back
               </button>
               <button
-                onClick={handleSubmit}
+                onClick={handleSubmitAndPay}
                 disabled={loading}
                 className="flex-1 py-3 bg-green-800 text-white font-semibold rounded-xl hover:bg-green-700 transition disabled:opacity-50"
               >
-                {loading ? "Submitting..." : "Submit Filing Request →"}
+                {loading ? "Redirecting to payment..." : "Proceed to Payment →"}
               </button>
             </div>
           </div>

@@ -13,6 +13,10 @@ const {
 const { protect } = require("../middleware/authMiddleware");
 const { upload } = require("../middleware/uploadMiddleware");
 const { downloadFile } = require("../controllers/filingController");
+const {
+  initializePayment,
+  verifyPayment,
+} = require("../controllers/paymentController");
 
 router.use(protect);
 
@@ -20,6 +24,8 @@ router.get("/types", getFilingTypes);
 router.post("/", upload.array("documents", 15), createFiling);
 router.get("/", getMyFilings);
 router.get("/download", downloadFile);
+router.get("/verify-payment/:reference", verifyPayment);
+router.post("/:id/pay", initializePayment);
 router.get("/:id", getFilingById);
 router.get("/:id/messages", getFilingMessages);
 router.post("/:id/messages", replyToFiling);

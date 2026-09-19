@@ -1,5 +1,4 @@
 const prisma = require("../prisma/client");
-const { sendFilingConfirmationEmail } = require("../utils/emailService");
 
 const FILING_COSTS = {
   ANNUAL_RETURNS: 15000,
@@ -224,13 +223,20 @@ const createFiling = async (req, res) => {
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 30);
 
+    const price = await prisma.filingPrice.findUnique({
+      where: { filingType },
+    });
+    const amount = price
+      ? price.serviceFee + price.govtFee
+      : FILING_COSTS[filingType] || 0;
+
     const filing = await prisma.filing.create({
       data: {
         filingType,
-        status: "PENDING",
+        status: "AWAITING_PAYMENT",
         dueDate,
         businessId,
-        amount: FILING_COSTS[filingType],
+        amount,
         formData:
           typeof formData === "string" ? JSON.parse(formData) : formData,
         submittedAt: new Date(),
@@ -255,21 +261,13 @@ const createFiling = async (req, res) => {
       });
     }
 
-    // Send confirmation email
-    try {
-      await sendFilingConfirmationEmail(
-        req.user.email,
-        req.user.fullName,
-        filingType,
-        business.businessName,
-      );
-    } catch (emailError) {
-      console.error("Filing confirmation email error:", emailError.message);
-    }
+    // Confirmation email is sent once payment is confirmed (see
+    // paymentController.markFilingAsPaid), not here — the request isn't
+    // actually submitted for processing until it's paid for.
 
     res.status(201).json({
       success: true,
-      message: "Filing submitted successfully!",
+      message: "Filing created — proceed to payment to submit it.",
       filing,
     });
   } catch (error) {

@@ -9,6 +9,7 @@ const businessRoutes = require("./routes/businessRoutes");
 const filingRoutes = require("./routes/filingRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const agentRoutes = require("./routes/agentRoutes");
+const webhookRoutes = require("./routes/webhookRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,6 +21,9 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
+// Mounted before express.json() — Paystack signature verification needs the raw body
+app.use("/api/webhooks", webhookRoutes);
 
 app.use(express.json());
 

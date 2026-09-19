@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import BusinessSetup from "./pages/BusinessSetup";
 import NewFiling from "./pages/NewFiling";
+import PaymentCallback from "./pages/PaymentCallback";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import FilingDetail from "./pages/FilingDetail";
@@ -65,6 +66,14 @@ function App() {
           element={
             <ProtectedRoute>
               <FilingDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment/callback"
+          element={
+            <ProtectedRoute>
+              <PaymentCallback />
             </ProtectedRoute>
           }
         />
