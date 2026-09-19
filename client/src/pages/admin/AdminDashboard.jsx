@@ -121,17 +121,6 @@ function AdminDashboard() {
     );
   });
 
-  const getStatusColor = (status) =>
-    ({
-      PENDING: "bg-yellow-100 text-yellow-700",
-      IN_REVIEW: "bg-blue-100 text-blue-700",
-      AWAITING_INFO: "bg-orange-100 text-orange-700",
-      PROCESSING: "bg-purple-100 text-purple-700",
-      SUBMITTED_TO_CAC: "bg-indigo-100 text-indigo-700",
-      COMPLETED: "bg-green-100 text-green-700",
-      REJECTED: "bg-red-100 text-red-700",
-    })[status] || "bg-gray-100 text-gray-700";
-
   const getStatusStyle = (status) =>
     ({
       PENDING: { bg: "#fefce8", color: "#854d0e" },
@@ -696,7 +685,7 @@ function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredFilings.map((filing, i) => {
+                  {filteredFilings.map((filing) => {
                     const s = getStatusStyle(filing.status);
                     const isSelected = selectedFilings.includes(filing.id);
                     return (

@@ -33,6 +33,12 @@ app.get("/", (req, res) => {
   res.json({ message: "CAC Filing API is running! 🚀" });
 });
 
+app.get("/health", (req, res) => {
+  res
+    .status(200)
+    .json({ status: "alive", timestamp: new Date().toISOString() });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
